@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Bebas+Neue&display=swap');
 
 /* ============================================
    AURA & SPICE — ANTIGRAVITY DESIGN SYSTEM
@@ -576,11 +576,28 @@ header.scrolled {
   background: var(--accent-gold-dim);
 }
 
+.dish-pill-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  display: inline-block;
+}
+
+.dish-pill:hover .dish-pill-img {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
 .dish-pill .dish-price {
   color: var(--accent-gold);
   font-weight: 600;
   margin-left: auto;
 }
+
 
 /* ============================================
    HORIZONTAL SCROLL GALLERY
@@ -604,7 +621,8 @@ header.scrolled {
   overflow: hidden;
   position: relative;
   cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .gallery-card:hover {
@@ -656,9 +674,12 @@ header.scrolled {
 }
 
 .stat-item h3 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   color: var(--accent-gold);
   margin-bottom: 8px;
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 3px;
+  line-height: 1;
 }
 
 .stat-item p {
@@ -753,7 +774,9 @@ header.scrolled {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow-float);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
   border: 1px solid var(--glass-border);
   position: relative;
   display: flex;

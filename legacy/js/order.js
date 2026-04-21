@@ -211,17 +211,18 @@ function setupOrbInteractions() {
   // Agent 5: Calculate scrollbar width
   scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-  // Toggle handlers
+  // Toggle handlers — Agent 6: init() + playSwoosh() fire synchronously BEFORE
+  // state mutation so sound is back-to-back with the physical click.
   statusOrb.addEventListener('click', () => {
     AudioEngine.init();
-    OrbStore.statusOpen = true;
     AudioEngine.playSwoosh();
+    OrbStore.statusOpen = true;
   });
   
   cartOrb.addEventListener('click', () => {
     AudioEngine.init();
-    OrbStore.cartOpen = true;
     AudioEngine.playSwoosh();
+    OrbStore.cartOpen = true;
   });
 
   // Close triggers
@@ -482,6 +483,12 @@ function removeFromCart(id) {
   cart[id].qty--;
   if (cart[id].qty <= 0) {
     delete cart[id];
+    // Agent 8: Reset the menu-grid button text when qty drops to zero
+    const menuBtn = document.getElementById(`add-btn-${id}`);
+    if (menuBtn) {
+      menuBtn.textContent = 'Add';
+      menuBtn.classList.remove('added');
+    }
   }
   updateCartUI();
   const btn = document.getElementById(`add-btn-${id}`);
@@ -619,11 +626,8 @@ async function submitOrder() {
   cart = {};
   updateCartUI();
   
-  // Agent 8: Seamlessly route checkout to the status pipeline
+  // Close the cart drawer — user can manually open status tracker anytime
   OrbStore.cartOpen = false;
-  setTimeout(() => {
-    OrbStore.statusOpen = true;
-  }, 400);
 
   const overlay = document.getElementById('success-overlay');
   overlay.classList.add('active');

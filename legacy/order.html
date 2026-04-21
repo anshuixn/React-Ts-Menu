@@ -215,57 +215,7 @@
     .drawer-item:nth-child(3) { transition-delay: 0.2s; }
     .drawer-item:nth-child(4) { transition-delay: 0.3s; }
 
-    /* ---- Order Page Mobile Responsive ---- */
-    @media (max-width: 768px) {
-      .order-header-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 1.5rem;
-      }
-
-      .order-header-bar h2 {
-        font-size: 1.5rem;
-      }
-
-      .filter-tabs {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding-bottom: 4px;
-      }
-
-      .filter-tabs::-webkit-scrollbar { display: none; }
-
-      .filter-tab {
-        white-space: nowrap;
-        flex-shrink: 0;
-        padding: 8px 16px;
-        font-size: 0.8rem;
-        min-height: 40px;
-      }
-
-      .live-tracker {
-        padding: 1rem 1.2rem !important;
-        border-radius: 12px;
-      }
-
-      #tracker-status {
-        font-size: 1rem !important;
-      }
-
-      #tracker-desc {
-        font-size: 0.8rem !important;
-      }
-
-      .tracker-step .step-circle,
-      .step-circle {
-        width: 30px !important;
-        height: 30px !important;
-        font-size: 0.85rem !important;
-      }
-    /* Particles (Agent 7) */
+    /* ---- Particles ---- */
     .add-particle {
       position: fixed;
       width: 12px;
@@ -273,11 +223,12 @@
       background: var(--accent-gold);
       border-radius: 50%;
       box-shadow: 0 0 15px var(--accent-gold);
-      z-index: 10001; /* Highest */
+      z-index: 10001;
       pointer-events: none;
       transition: transform 0.6s cubic-bezier(0.5, 0, 0.2, 1);
     }
-    /* Cart Premium Redesign */
+
+    /* ---- Cart Premium Redesign (all screens) ---- */
     .cart-item-premium {
       display: flex;
       align-items: center;
@@ -361,12 +312,8 @@
       border-radius: 50%;
       transition: all 0.2s;
     }
-    .cart-qty-btn:hover {
-      background: rgba(212, 175, 55, 0.2);
-    }
-    .cart-qty-btn:active {
-      transform: scale(0.9);
-    }
+    .cart-qty-btn:hover { background: rgba(212, 175, 55, 0.2); }
+    .cart-qty-btn:active { transform: scale(0.9); }
     .cart-qty-num {
       padding: 0 12px;
       font-size: 1rem;
@@ -375,6 +322,38 @@
       text-align: center;
     }
 
+    /* ---- Order Page Mobile Responsive ---- */
+    @media (max-width: 768px) {
+      .order-header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+      }
+      .order-header-bar h2 { font-size: 1.5rem; }
+      .filter-tabs {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+      }
+      .filter-tabs::-webkit-scrollbar { display: none; }
+      .filter-tab {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        min-height: 40px;
+      }
+      .live-tracker { padding: 1rem 1.2rem !important; border-radius: 12px; }
+      #tracker-status { font-size: 1rem !important; }
+      #tracker-desc { font-size: 0.8rem !important; }
+      .tracker-step .step-circle, .step-circle {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.85rem !important;
+      }
       .cart-item-name {
         font-size: 0.85rem;
         max-width: 45%;

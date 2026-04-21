@@ -1,0 +1,389 @@
+/* ============================================
+   STAFF DASHBOARD — Kanban Board Styles
+   ============================================ */
+.board-container {
+  display: flex;
+  gap: 1.5rem;
+  padding: 2rem 2%;
+  height: calc(100vh - 80px);
+  overflow-x: auto;
+  align-items: flex-start;
+  scroll-snap-type: x mandatory;
+}
+
+.kanban-column {
+  flex: 0 0 310px;
+  background: rgba(12, 12, 12, 0.85); /* Deep charcoal Antigravity style */
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(212, 175, 55, 0.15); /* Soft gold tint */
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05); /* Premium depth */
+  transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  scroll-snap-align: start;
+}
+
+.kanban-column.drag-over {
+  border-color: var(--accent-gold);
+  box-shadow: var(--shadow-hover);
+}
+
+.col-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.col-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding-left: 12px;
+  margin: 0;
+}
+
+.col-count {
+  background: var(--bg-dark);
+  color: var(--text-light);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-width: 30px;
+  text-align: center;
+}
+
+.kanban-cards {
+  padding: 1rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  min-height: 100px;
+  transition: background 0.3s ease;
+}
+
+/* Empty State */
+.kanban-cards:empty::after {
+  content: 'No orders';
+  display: block;
+  text-align: center;
+  padding: 30px 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+/* Order Card */
+.order-card {
+  background: rgba(22, 22, 22, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 14px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  cursor: grab;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.order-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+}
+
+.order-card[data-status="new"]::before { background: var(--status-new); }
+.order-card[data-status="cooking"]::before { background: var(--status-cooking); }
+.order-card[data-status="ready"]::before { background: var(--status-ready); }
+.order-card[data-status="completed"]::before { background: var(--text-dim); }
+
+.order-card:active { cursor: grabbing; }
+
+.order-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.order-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.95) rotate(2deg);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.table-number {
+  font-weight: 700;
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+}
+
+.order-time {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: var(--bg-dark);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.order-items {
+  list-style: none;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.order-items li {
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+.order-items li .item-qty {
+  color: var(--text-light);
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.total-price {
+  font-weight: 700;
+  text-align: right;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 10px;
+  color: var(--accent-gold);
+  font-size: 1rem;
+}
+
+/* Status Action Button */
+.status-action-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.status-action-btn.start-cooking {
+  background: rgba(230, 126, 34, 0.15);
+  color: var(--status-cooking);
+  border: 1px solid rgba(230, 126, 34, 0.3);
+}
+
+.status-action-btn.start-cooking:hover {
+  background: var(--status-cooking);
+  color: white;
+}
+
+.status-action-btn.mark-ready {
+  background: rgba(46, 204, 113, 0.15);
+  color: var(--status-ready);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.status-action-btn.mark-ready:hover {
+  background: var(--status-ready);
+  color: white;
+}
+
+.status-action-btn.mark-complete {
+  background: rgba(136, 136, 136, 0.15);
+  color: var(--text-muted);
+  border: 1px solid rgba(136, 136, 136, 0.3);
+}
+
+.status-action-btn.mark-complete:hover {
+  background: var(--text-muted);
+  color: var(--bg-dark);
+}
+
+/* Pulse Indicator */
+.pulse-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: var(--status-ready);
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 0 8px var(--status-ready);
+  animation: pulse 1.5s infinite;
+}
+
+/* New order flash */
+@keyframes newOrderFlash {
+  0% { border-color: var(--status-new); box-shadow: 0 0 20px rgba(79,173,235,0.4); }
+  50% { border-color: var(--glass-border); box-shadow: none; }
+  100% { border-color: var(--status-new); box-shadow: 0 0 20px rgba(79,173,235,0.4); }
+}
+
+.order-card.new-arrival {
+  animation: newOrderFlash 1s ease 3;
+}
+
+/* Header bar for staff */
+.staff-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   STAFF DASHBOARD — MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+  .board-container {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 80px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 1rem 2%;
+    gap: 1rem;
+  }
+
+  .kanban-column {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: none;
+  }
+
+  .kanban-cards {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Staff header bar — wrapping */
+  .staff-header-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+
+  .staff-name-badge {
+    font-size: 0.8rem !important;
+  }
+
+  .logout-btn,
+  .admin-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  /* Hide "Live Monitoring" text on mobile to save space */
+  .staff-header-bar > span:nth-child(2) {
+    display: none;
+  }
+
+  /* Board */
+  .board-container {
+    padding: 0.8rem 3%;
+    gap: 0.8rem;
+  }
+
+  .kanban-column {
+    border-radius: 14px;
+  }
+
+  .col-header {
+    padding: 1rem;
+  }
+
+  .col-title {
+    font-size: 0.9rem;
+    padding-left: 10px;
+  }
+
+  .col-count {
+    font-size: 0.8rem;
+    padding: 2px 10px;
+  }
+
+  .kanban-cards {
+    padding: 0.8rem;
+    max-height: 250px;
+  }
+
+  /* Order cards — compact */
+  .order-card {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
+  }
+
+  .table-number {
+    font-size: 1rem;
+  }
+
+  .order-time {
+    font-size: 0.7rem;
+  }
+
+  .order-items {
+    font-size: 0.85rem;
+  }
+
+  .total-price {
+    font-size: 0.9rem;
+  }
+
+  .status-action-btn {
+    padding: 10px;
+    font-size: 0.75rem;
+    min-height: 44px;
+  }
+
+  /* Disable drag on mobile (touch doesn't support native drag well) */
+  .order-card {
+    cursor: default;
+  }
+
+  .order-card:active {
+    cursor: default;
+  }
+}
+
+@media (max-width: 480px) {
+  .board-container {
+    padding: 0.5rem 2%;
+  }
+
+  .col-header {
+    padding: 0.8rem;
+  }
+
+  .kanban-cards {
+    padding: 0.6rem;
+    max-height: 220px;
+  }
+
+  .order-card {
+    padding: 0.8rem;
+  }
+
+  .order-items li {
+    font-size: 0.8rem;
+  }
+}
