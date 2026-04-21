@@ -1,84 +1,86 @@
-# 🍽️ Aura & Spice — Premium Restaurant Portal
+# Aura & Spice Restaurant Portal
 
-Welcome to the newly modernized **Aura & Spice** web application! 
-This project has been fully migrated from a Vanilla HTML/CSS/JS frontend to a state-of-the-art **Vite + React 18 + TypeScript** architecture, paired with a resilient Node.js Express backend.
+A modern, real-time restaurant management and ordering web application. Featuring a premium dark-mode aesthetic with fluid touch gestures, a dynamic Kanban staff board, and a fully interactive QR-based ordering system.
 
-## 🚀 Architectural Overview
+This project is built using a decoupled architecture:
+- **Frontend**: A React + TypeScript Single Page Application (SPA), styled with vanilla CSS for maximum performance, and bundled with Vite.
+- **Backend**: A lean Node.js + Express backend providing RESTful endpoints and real-time polling synchronization for the staff dashboard.
 
-### Frontend (React + Vite)
-- **Framework**: React 18 powered by Vite for lightning-fast HMR and optimized production builds.
-- **Language**: TypeScript for strict typing across components, models, and API responses.
-- **Styling**: Vanilla CSS. The original `style.css` (1,487 lines of custom design tokens, antigravity shadows, glassmorphism layers, and animations) was fully preserved and mapped to React.
-- **Routing**: `react-router-dom` v6 for seamless client-side navigation.
-- **State Management**: A custom Context + `useReducer` engine (`cartStore.ts`) handles complex, concurrent cart workflows without the fragility of vanilla DOM proxies.
+---
 
-### Backend (Node + Express)
-- **Server**: Express.js REST API handling orders. Built with lightweight data structures to maintain a fast, synchronized live feed to the staff dashboard.
-- **Port**: Defaulted to `3000`.
+## 🚀 Getting Started
 
-## 📦 Project Structure
+The project requires running both the backend server and the frontend client simultaneously.
 
-```text
-AuraSpice-React/
-├── public/                 # Static assets (favicons, etc.)
-├── src/
-│   ├── assets/             # Menu imagery, tracker sprites
-│   ├── components/         # Modular React UI components
-│   │   ├── home/           # Landing page elements (Hero, Stats, Cuisine)
-│   │   ├── layout/         # Header & Footer wrapper
-│   │   └── order/          # Menu grid, Cart Drawer, Status Drawer, Orbs
-│   ├── data/               # TS-Strict static definitions (menuData.ts)
-│   ├── hooks/              # Custom hook logic (Audio, Parallax, Polling)
-│   ├── pages/              # Route views (Home, Order, Staff)
-│   ├── store/              # Context providers (CartProvider)
-│   ├── types/              # Global TypeScript models (Order, Category, etc.)
-│   ├── App.tsx             # Root router configuration
-│   ├── main.tsx            # React 18 root entry point
-│   └── style.css           # Preserved global design system CSS
-├── package.json
-├── tsconfig.json           # TS Compiler Rules
-└── vite.config.ts          # Vite Config with proxy proxying /api to port 3000
-```
+### 1. Start the Backend Server
 
-## 🛠️ Features & Polish
-
-1. **Dual-Orb Architecture:** We replaced the sticky footer bar with a futuristic, dynamic dual-orb layout (Cart on the right, Status on the left) ensuring the food commands focus while keeping tools literally in reach.
-2. **Magnetic UI Elements:** Hovering over 'Add to Cart' buttons gracefully pulls them towards your cursor, combining tactile feedback with deep digital immersion.
-3. **Optimized Cart Traversal:** Surgical React diffing means no more jerky layout jumps when updating item quantities. 
-4. **Synchronous Audio Engine:** Audio Context feedback kicks in globally on-click to eliminate playback delay, adhering to modern autoplay security policies.
-5. **Real-time Kitchen Polling:** The Status Drawer actively synchronizes with the Express.js server, reflecting new pipeline stages in real-time.
-
-## ⚡ Setup & Run Instructions
-
-You will need two terminal processes to run the application effectively.
-
-### 1. Start the Express Backend
-The Express server handles the active order statuses and acts as the single source of truth.
+The backend runs on **Port 3000** and serves the API for ordering, authentication, and live status syncing.
 
 ```bash
-cd /Users/anshu_sir/Codeing/AntiGravty/Experiments/
+# From the root directory (where server.js lives)
+# 1. Install backend dependencies
 npm install
+
+# 2. Start the server
 npm start
 ```
-*The server will spin up on `http://localhost:3000`.*
+*You should see a success message indicating the server is running on `http://localhost:3000`.*
 
-### 2. Start the Vite React Frontend
-The React server gives you hot module reloading and proxies all `/api/*` calls directly to your backend.
+### 2. Start the React Frontend
+
+The frontend is a Vite project located in the `AuraSpice-React` folder. The Vite dev server will proxy any `/api` requests to your backend automatically.
 
 ```bash
-cd /Users/anshu_sir/Codeing/AntiGravty/Experiments/AuraSpice-React
+# Open a NEW terminal window/tab
+# 1. Navigate to the React folder
+cd AuraSpice-React
+
+# 2. Install frontend dependencies
 npm install
+
+# 3. Start the Vite development server
 npm run dev
 ```
-*Vite will spin up the web app on `http://localhost:5173`. Open this URL in your browser to experience the portal.*
 
-**Staff Dashboard:**
-Navigate to `http://localhost:5173/staff` to view and interact with live incoming orders hitting the backend!
+---
 
-## 🛡️ Security Checks Completed
-- All React injections are inherently secured from XSS thanks to React's JSX auto-escaping.
-- `dangerouslySetInnerHTML` is explicitly disallowed.
-- Audio contexts load exclusively upon valid DOM cursor events, complying securely with autoplay block rules.
+## 📱 Using the App
 
-## 👥 Agent Matrix Commendations
-This migration was orchestrated using a 20-Agent parallel workflow (Foundations, Hooks, Components, Polishing), followed immediately by a rigorous 13-Agent QA phase (Typing strictness, Animation cleanup, Security Audits) resulting in zero TypeScript squiggles and flawless runtime behavior.
+Once both servers are running, access the local links provided by Vite (typically `http://localhost:5173`):
+
+### 1. The Customer Menu & Ordering Portal
+- **URL**: `http://localhost:5173/order?table=01` (or just navigate to `/` and click the order button).
+- Add items to your cart.
+- You can swipe right on the cart drawer (on touchscreen/mobile view) to test fluid touch gestures!
+- Click **"Place Order"** to send it to the kitchen.
+
+### 2. The Kitchen / Staff Portal
+- **URL**: `http://localhost:5173/staff`
+- **Default Login:**
+  - **ID:** `admin`
+  - **Password:** `admin`
+- Inside, you will see a real-time **Kanban Board** with orders popping up instantly as they are placed by customers.
+- **Interactive Drag & Drop**: You can drag an order card from "Pending" to "In Progress" or click the status progression buttons.
+- As an admin, check out the **"👥 Employees"** tab in the top navigation to add or remove staff members and view the Master Establishment Key.
+
+---
+
+## 🛠 Tech Stack Overview
+
+- **Frontend Core:** React 18, TypeScript, React Router DOM
+- **State Management:** React Context API (Auth), Zustand-inspired Hooks (Cart)
+- **Styling:** Custom "Antigravity" Vanilla CSS using CSS Variables, Glassmorphism, and responsive units.
+- **Backend:** Node.js, Express, CORS
+- **Tooling:** Vite, ESLint
+
+## 📁 Repository Structure
+
+```text
+├── server.js              # The Express Backend API Server
+├── package.json           # Backend dependencies and scripts
+├── AuraSpice-React/       # The complete Frontend React App
+│   ├── src/               # React Codebase (components, hooks, pages, types)
+│   ├── package.json       # Frontend dependencies and Vite scripts
+│   └── vite.config.ts     # Vite bundler, proxy configuration for /api
+└── legacy/                # Archived Vanilla JS & HTML implementation
+```
