@@ -105,10 +105,11 @@ app.post('/api/staff', (req, res) => {
   res.status(201).json({ success: true, account: { id: account.id, name: account.name, role: account.role } });
 });
 
-// DELETE /api/staff/:index - Delete a staff account by index
-app.delete('/api/staff/:index', (req, res) => {
-  const idx = parseInt(req.params.index, 10);
-  if (idx >= 0 && idx < staffAccounts.length) {
+// DELETE /api/staff/by-id/:id - Delete a staff account by stable ID
+app.delete('/api/staff/by-id/:id', (req, res) => {
+  const staffId = req.params.id;
+  const idx = staffAccounts.findIndex(a => a.id === staffId);
+  if (idx > -1) {
     staffAccounts.splice(idx, 1);
     res.status(204).end();
   } else {

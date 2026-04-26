@@ -32,6 +32,14 @@
 
   /* Spacing */
   --section-padding: 120px 0;
+
+  /* Z-layer Architecture (Agent 6) */
+  --layer-backdrop: 9998;
+  --layer-orbs: 9999;
+  --layer-drawers: 10000;
+
+  /* Physics */
+  --orb-bezier: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *, *::before, *::after {
@@ -1699,6 +1707,100 @@ header.scrolled {
   padding: 20px;
 }
 
+/* ---- Cart Premium Redesign (all screens) ---- */
+.cart-item-premium {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background: rgba(20, 20, 20, 0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  transition: all 0.3s var(--orb-bezier);
+}
+.cart-item-premium:hover {
+  background: rgba(30, 30, 30, 0.7);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.cart-image-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--glass-border);
+}
+.cart-item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cart-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+.cart-item-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: white;
+  margin: 0;
+  line-height: 1.2;
+}
+.cart-item-unit-price {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.cart-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  height: 64px;
+}
+.cart-item-total {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+.cart-qty-pill {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  padding: 2px;
+}
+.cart-qty-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-gold);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.4rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+.cart-qty-btn:hover { background: rgba(212, 175, 55, 0.2); }
+.cart-qty-btn:active { transform: scale(0.9); }
+.cart-qty-num {
+  padding: 0 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  min-width: 30px;
+  text-align: center;
+}
+
 .cart-footer {
   padding: 20px;
   border-top: 1px solid var(--glass-border);
@@ -1752,5 +1854,292 @@ header.scrolled {
 
 @media (max-width: 480px) {
   .filter-tab { padding: 6px 12px; font-size: 0.75rem; }
+}
+
+/* ============================================
+   AGENT 10 — @keyframes shake (login error)
+   ============================================ */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); }
+  30% { transform: translateX(8px); }
+  45% { transform: translateX(-6px); }
+  60% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); }
+}
+
+/* ============================================
+   AGENT 6 & 10 — LOGIN OVERLAY (Staff Auth)
+   ============================================ */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(5, 5, 5, 0.97);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background: rgba(15, 15, 15, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 24px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
+  text-align: center;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.login-lock-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.login-subtitle {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   AGENT 7 — STAFF PAGE SECTION CLASSES
+   ============================================ */
+.section-label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: var(--text-light);
+  margin-bottom: 16px;
+}
+
+.gold-line {
+  width: 60px;
+  height: 2px;
+  background: var(--accent-gold);
+  border-radius: 2px;
+  margin-bottom: 24px;
+}
+
+/* ============================================
+   AGENT 10 — EMPLOYEE MODAL CSS
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 95%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-float);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.3rem;
+  color: var(--text-light);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.3s;
+  padding: 0 4px;
+}
+
+.modal-close:hover { color: #ff4757; }
+
+.emp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.emp-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.emp-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.emp-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.emp-badge-custom {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.emp-remove-btn {
+  background: transparent;
+  border: 1px solid rgba(255,71,87,0.3);
+  color: #ff4757;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.emp-remove-btn:hover { background: #ff4757; color: white; }
+
+.emp-empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 2rem;
+  font-size: 0.9rem;
+}
+
+.emp-section-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin: 1rem 0 0.5rem;
+  padding-left: 12px;
+}
+
+.emp-key-box {
+  background: var(--bg-dark);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.emp-key-box label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.emp-key-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  letter-spacing: 4px;
+  margin-top: 6px;
+  font-family: 'Courier New', monospace;
+}
+
+/* ============================================
+   AGENT 9 — MOBILE LOGIN CARD RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .login-card {
+    margin: 1rem;
+    padding: 1.8rem 1.5rem;
+    border-radius: 18px;
+    max-width: none;
+    width: calc(100% - 2rem);
+  }
+
+  .modal-card {
+    width: calc(100% - 1.5rem);
+    margin: 0.75rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    max-height: 85vh;
+    max-height: 85dvh;
+  }
+
+  .modal-header h2 { font-size: 1.1rem; }
+
+  .emp-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .emp-table th,
+  .emp-table td {
+    font-size: 0.8rem;
+    padding: 8px;
+    white-space: nowrap;
+  }
+
+  .emp-key-value {
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .emp-table th,
+  .emp-table td {
+    font-size: 0.75rem;
+    padding: 6px;
+  }
 }
 

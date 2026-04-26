@@ -25,11 +25,11 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
     fetchData();
   }, [fetchData]);
 
-  const handleRemove = async (index: number, name: string, id: string) => {
+  const handleRemove = async (id: string, name: string) => {
     if (!window.confirm(`Remove "${name}" (${id}) from the employee list?\n\nThey will no longer be able to sign in.`)) return;
     
     try {
-      await fetch(`/api/staff/${index}`, { method: 'DELETE' });
+      await fetch(`/api/staff/by-id/${encodeURIComponent(id)}`, { method: 'DELETE' });
       fetchData();
     } catch (_) {}
   };
@@ -80,7 +80,7 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
                   <td style={{ color: 'var(--text-light)', fontWeight: 500 }}>{emp.name}</td>
                   <td><code style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 4, fontSize: '0.85rem' }}>{emp.id}</code></td>
                   <td><span className="emp-badge-custom">{emp.registeredAt ? new Date(emp.registeredAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</span></td>
-                  <td><button className="emp-remove-btn" onClick={() => handleRemove(idx, emp.name, emp.id)}>🗑 Remove</button></td>
+                  <td><button className="emp-remove-btn" onClick={() => handleRemove(emp.id, emp.name)}>🗑 Remove</button></td>
                 </tr>
               ))
             )}

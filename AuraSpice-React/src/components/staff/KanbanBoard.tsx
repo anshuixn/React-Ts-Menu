@@ -1,5 +1,6 @@
 import { useKanbanDrag } from '../../hooks/useKanbanDrag';
 import type { Order, OrderStatus } from '../../types';
+import { useState, useEffect } from 'react';
 
 const STATUSES: { id: OrderStatus; title: string; color: string }[] = [
   { id: 'new', title: 'Pending', color: 'var(--status-new)' },
@@ -8,12 +9,28 @@ const STATUSES: { id: OrderStatus; title: string; color: string }[] = [
   { id: 'completed', title: 'Completed', color: 'var(--text-dim)' },
 ];
 
-function OrderCard({ order, dragProps, onAction, disableDrag }: { order: Order; dragProps: any; onAction: (id: string, s: OrderStatus) => void; disableDrag: boolean }) {
+function useIsMobile(breakpoint = 768): boolean {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
+function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: {
+  order: Order;
+  dragProps: any;
+  onAction: (id: string, s: OrderStatus) => void;
+  disableDrag: boolean;
+  isBeingDragged: boolean;
+}) {
   const time = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div
-      className={`order-card ${disableDrag ? '' : 'draggable'}`}
+      className={`order-card ${disableDrag ? '' : 'draggable'} ${isBeingDragged ? 'dragging' : ''}`}
       data-status={order.status}
       {...(disableDrag ? {} : dragProps)}
     >
@@ -44,8 +61,8 @@ function OrderCard({ order, dragProps, onAction, disableDrag }: { order: Order; 
 }
 
 export function KanbanBoard({ orders, onUpdateStatus }: { orders: Order[]; onUpdateStatus: (id: string, status: OrderStatus) => void }) {
-  const { dragOverColumn, dragProps, dropProps } = useKanbanDrag(onUpdateStatus);
-  const isMobile = window.innerWidth <= 768; // Simple check for mobile drag disable
+  const { activeDragId, dragOverColumn, dragProps, dropProps } = useKanbanDrag(onUpdateStatus);
+  const isMobile = useIsMobile();
 
   return (
     <div className="board-container">
@@ -70,6 +87,7 @@ export function KanbanBoard({ orders, onUpdateStatus }: { orders: Order[]; onUpd
                   dragProps={dragProps(order.id)}
                   onAction={onUpdateStatus}
                   disableDrag={isMobile}
+                  isBeingDragged={activeDragId === order.id}
                 />
               ))}
             </div>

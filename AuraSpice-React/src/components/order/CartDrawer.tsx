@@ -13,7 +13,7 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerProps) {
-  const { cart, totalQty, totalPrice } = useCart();
+  const { cart, totalPrice } = useCart();
   const items = Object.values(cart);
   const drawerRef = useRef<HTMLDivElement>(null);
 

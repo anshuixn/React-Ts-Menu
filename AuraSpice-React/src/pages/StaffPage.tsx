@@ -10,7 +10,7 @@ import '../staff-dashboard.css';
 // ============================================
 
 function StaffPageInner() {
-  const { orders, loading, updateOrderStatus, clearOrders } = useStaffOrdersPolling();
+  const { orders, loading, error, updateOrderStatus, clearOrders } = useStaffOrdersPolling();
 
   return (
     <StaffLayout>
@@ -25,6 +25,16 @@ function StaffPageInner() {
 
         {loading ? (
           <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading orders…</p>
+        ) : error ? (
+          <div style={{
+            textAlign: 'center', padding: '60px 20px',
+            background: 'rgba(255,71,87,0.05)', border: '1px solid rgba(255,71,87,0.2)',
+            borderRadius: 16, margin: '20px 0'
+          }}>
+            <p style={{ fontSize: '2rem', marginBottom: 12 }}>⚠️</p>
+            <p style={{ color: '#ff4757', fontWeight: 600, marginBottom: 8 }}>Backend Unavailable</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{error}</p>
+          </div>
         ) : (
           <KanbanBoard orders={orders} onUpdateStatus={updateOrderStatus} />
         )}

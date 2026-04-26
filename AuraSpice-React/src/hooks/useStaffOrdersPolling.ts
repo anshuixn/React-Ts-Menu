@@ -5,6 +5,7 @@ import { useAudio } from './useAudio';
 export function useStaffOrdersPolling() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { playChime } = useAudio();
   const previousCountRef = useRef(0);
 
@@ -14,15 +15,18 @@ export function useStaffOrdersPolling() {
       if (res.ok) {
         const data: Order[] = await res.json();
         setOrders(data);
+        setError(null);
         
         // Only chime if it's a new order (and not the initial load)
         if (!isInitial && previousCountRef.current > 0 && data.length > previousCountRef.current) {
           playChime();
         }
         previousCountRef.current = data.length;
+      } else {
+        if (isInitial) setError('Server returned an error. Is the backend running?');
       }
     } catch (_) {
-      // silent
+      if (isInitial) setError('Cannot reach the backend server. Run `node server.js` in the root directory.');
     } finally {
       if (isInitial) setLoading(false);
     }
@@ -36,7 +40,7 @@ export function useStaffOrdersPolling() {
 
   const updateOrderStatus = useCallback(async (id: string, status: string) => {
     try {
-      // Optmistic update
+      // Optimistic update
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: status as any } : o));
       
       await fetch(`/api/orders/${id}`, {
@@ -57,5 +61,5 @@ export function useStaffOrdersPolling() {
     } catch (_) {}
   }, []);
 
-  return { orders, loading, updateOrderStatus, clearOrders };
+  return { orders, loading, error, updateOrderStatus, clearOrders };
 }

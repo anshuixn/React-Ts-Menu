@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export function KanbanHeader({ onClearAll }: { onClearAll: () => Promise<void> }) {
+export function KanbanHeader({ onClearAll }: { onClearAll: () => void }) {
   const [clearPending, setClearPending] = useState(false);
 
   const handleClear = async () => {

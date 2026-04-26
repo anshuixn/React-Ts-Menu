@@ -2,4 +2,7 @@
 ecc-install.json
 node_modules/
 server.log
+server.pid
+server_output.log
 .DS_Store
+dist/
