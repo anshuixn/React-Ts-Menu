@@ -1,15 +1,22 @@
 import type { Category } from '../../types';
 
 // ============================================
-// FilterTabs — Agent 16
+// FilterTabs — Agent 5 (emoji → image icons)
 // ============================================
-const TABS: { label: string; value: Category }[] = [
-  { label: 'All',          value: 'all' },
-  { label: '🥢 Chinese',   value: 'chinese' },
-  { label: '🍛 North Indian', value: 'north-indian' },
-  { label: '🥞 South Indian', value: 'south-indian' },
-  { label: '🍔 Fast Food', value: 'fast-food' },
-  { label: '🥤 Beverages', value: 'beverages' },
+
+interface TabDef {
+  label: string;
+  value: Category;
+  icon: string;    // path under /icons/
+}
+
+const TABS: TabDef[] = [
+  { label: 'All',          value: 'all',          icon: '/icons/all.png' },
+  { label: 'Chinese',      value: 'chinese',      icon: '/icons/chinese.png' },
+  { label: 'North Indian', value: 'north-indian', icon: '/icons/north-indian.png' },
+  { label: 'South Indian', value: 'south-indian', icon: '/icons/south-indian.png' },
+  { label: 'Fast Food',    value: 'fast-food',    icon: '/icons/fast-food.png' },
+  { label: 'Beverages',    value: 'beverages',    icon: '/icons/beverages.png' },
 ];
 
 interface FilterTabsProps {
@@ -27,7 +34,13 @@ export function FilterTabs({ active, onChange }: FilterTabsProps) {
           data-filter={tab.value}
           onClick={() => onChange(tab.value)}
         >
-          {tab.label}
+          <img
+            src={tab.icon}
+            alt={tab.label}
+            className="filter-tab-icon"
+            draggable={false}
+          />
+          <span className="filter-tab-label">{tab.label}</span>
         </button>
       ))}
     </div>

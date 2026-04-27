@@ -24,7 +24,10 @@ export function StaffLayout({ children }: { children: ReactNode }) {
           Aura<span>&</span>Spice <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: 5 }}>Kitchen Portal</span>
         </div>
         <div className="staff-header-bar" style={{ display: 'flex', alignItems: 'center', gap: 15, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-          <span className="staff-name-badge" style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>👨‍🍳 {user?.name}</span>
+          <span className="staff-name-badge" style={{ color: 'var(--accent-gold)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <img src="/icons/chef.png" alt="Chef" style={{ width: 22, height: 22, objectFit: 'cover', borderRadius: '50%' }} draggable={false} />
+            {user?.name}
+          </span>
           <span><span className="pulse-indicator" style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--status-ready)', borderRadius: '50%', marginRight: 8, boxShadow: '0 0 8px var(--status-ready)', animation: 'pulse 1.5s infinite' }}></span> Live Monitoring</span>
           {isAdmin && (
             <button

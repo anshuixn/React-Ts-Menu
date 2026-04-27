@@ -35,7 +35,10 @@ function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: 
       {...(disableDrag ? {} : dragProps)}
     >
       <div className="order-header">
-        <span className="table-number">🪑 Table {order.table}</span>
+        <span className="table-number">
+          <img src="/icons/table.png" alt="Table" style={{ width: 18, height: 18, objectFit: 'cover', borderRadius: '50%', verticalAlign: 'middle', marginRight: 4 }} draggable={false} />
+          Table {order.table}
+        </span>
         <span className="order-time">{time}</span>
       </div>
       <ul className="order-items">

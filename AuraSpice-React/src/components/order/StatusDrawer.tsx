@@ -89,7 +89,7 @@ export function StatusDrawer({ isOpen, onClose, status, trackerData }: StatusDra
 
       {!status ? (
         <div id="status-empty" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: '2rem', marginBottom: 12 }}>🍽️</p>
+          <img src="/icons/status.png" alt="No orders" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: '50%', marginBottom: 12 }} draggable={false} />
           <p>No active order yet.<br />Place an order to track it here.</p>
         </div>
       ) : (

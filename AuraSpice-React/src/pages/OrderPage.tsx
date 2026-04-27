@@ -130,7 +130,8 @@ function OrderPageInner() {
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.35)';
             }}
           >
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>🪑 Table</span>
+            <img src="/icons/table.png" alt="Table" style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: '50%', flexShrink: 0 }} draggable={false} />
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Table</span>
             <span style={{ color: 'var(--accent-gold)', fontWeight: 700, fontSize: '1rem', minWidth: 24 }}>
               {tableNumber ? parseInt(tableNumber) : '—'}
             </span>
@@ -152,7 +153,7 @@ function OrderPageInner() {
       {/* Floating Orbs */}
       <OrbButton
         id="status-orb"
-        icon="📋"
+        icon="/icons/status.png"
         ariaLabel="View order status"
         ariaExpanded={statusOpen}
         onClick={openStatus}
@@ -163,7 +164,7 @@ function OrderPageInner() {
       />
       <OrbButton
         id="cart-orb"
-        icon="🛒"
+        icon="/icons/cart.png"
         badge={totalQty}
         badgeId="cart-badge"
         glowClass="cart-glow"

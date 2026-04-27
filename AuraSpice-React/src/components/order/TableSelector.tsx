@@ -47,7 +47,9 @@ export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps)
       >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🪑</div>
+          <div style={{ marginBottom: 8 }}>
+            <img src="/icons/table.png" alt="Table" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%' }} draggable={false} />
+          </div>
           <h2 style={{
             margin: 0,
             fontFamily: "'Cormorant Garamond', serif",
@@ -122,7 +124,7 @@ export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps)
           margin: 0,
           lineHeight: 1.5,
         }}>
-          🔑 Table number is printed on your table card.<br />
+          Table number is printed on your table card.<br />
           You can change it any time by tapping the table badge.
         </p>
       </div>

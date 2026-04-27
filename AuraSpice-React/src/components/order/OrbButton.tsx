@@ -1,10 +1,10 @@
 // ============================================
-// OrbButton — Agent 15
+// OrbButton — Agent 5 (emoji → image icons)
 // Floating orb buttons (cart + status)
 // ============================================
 interface OrbButtonProps {
   id: string;
-  icon: string;
+  icon: string;       // now an image path e.g. "/icons/cart.png"
   badge?: number;
   glowClass?: string;
   badgeId?: string;
@@ -15,6 +15,9 @@ interface OrbButtonProps {
 }
 
 export function OrbButton({ id, icon, badge, glowClass, badgeId, ariaLabel, ariaExpanded, onClick, style }: OrbButtonProps) {
+  // Detect if it's an image path or a plain emoji/string
+  const isImage = icon.startsWith('/') || icon.startsWith('http');
+
   return (
     <button
       id={id}
@@ -25,7 +28,18 @@ export function OrbButton({ id, icon, badge, glowClass, badgeId, ariaLabel, aria
       style={style}
     >
       <span className={`orb-glow ${glowClass ?? ''}`} />
-      <span className="orb-icon">{icon}</span>
+      <span className="orb-icon">
+        {isImage ? (
+          <img
+            src={icon}
+            alt={ariaLabel}
+            style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: '50%' }}
+            draggable={false}
+          />
+        ) : (
+          icon
+        )}
+      </span>
       {badge !== undefined && badge > 0 && (
         <span id={badgeId} className="orb-badge badge-bounce">{badge}</span>
       )}
@@ -34,7 +48,7 @@ export function OrbButton({ id, icon, badge, glowClass, badgeId, ariaLabel, aria
 }
 
 // ============================================
-// SuccessOverlay — Agent 15
+// SuccessOverlay — Agent 5
 // ============================================
 export function SuccessOverlay({ active }: { active: boolean }) {
   return (
@@ -44,7 +58,7 @@ export function SuccessOverlay({ active }: { active: boolean }) {
           <polyline points="8,25 20,37 42,13" />
         </svg>
       </div>
-      <h3 style={{ color: 'var(--text-light)', marginBottom: 10 }}>Order Placed! 🎉</h3>
+      <h3 style={{ color: 'var(--text-light)', marginBottom: 10 }}>Order Placed!</h3>
       <p style={{ color: 'var(--text-muted)' }}>Sending to the kitchen…</p>
     </div>
   );
