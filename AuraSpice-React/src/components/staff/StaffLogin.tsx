@@ -1,16 +1,26 @@
 import { useState } from 'react';
 import { useAuth } from '../../store/AuthContext';
 
+// ============================================================
+// PHASE 2 — Input length caps prevent oversized payloads.
+// PHASE 5 — Server returns a session token; we pass it to login().
+// Removed: "Default admin: admin / admin" hint in the UI.
+// ============================================================
+
+const MAX_ID_LEN   = 32;
+const MAX_PASS_LEN = 128;
+
 export function StaffLogin() {
-  const [staffId, setStaffId] = useState('');
+  const [staffId,  setStaffId]  = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [shake, setShake] = useState(false);
+  const [error,    setError]    = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [shake,    setShake]    = useState(false);
   const { login } = useAuth();
 
   const handleShake = () => {
     setShake(false);
-    setTimeout(() => setShake(true), 10);
+    setTimeout(() => setShake(true),  10);
     setTimeout(() => setShake(false), 410);
   };
 
@@ -18,23 +28,37 @@ export function StaffLogin() {
     e.preventDefault();
     setError('');
 
+    // Client-side guard — server validates too
+    if (!staffId || !password) {
+      setError('Please enter both Staff ID and password.');
+      handleShake();
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch('/api/staff/login', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: staffId, password }),
+        body:    JSON.stringify({
+          id:       staffId.slice(0, MAX_ID_LEN).trim(),
+          password: password.slice(0, MAX_PASS_LEN),
+        }),
       });
       const data = await res.json();
 
-      if (data.success) {
-        login(data.account);
+      if (res.ok && data.success && data.token) {
+        login(data.account, data.token); // Phase 5: store token via AuthContext
       } else {
-        setError(`❌ ${data.message}`);
+        // VULN FIXED: generic message — don't reveal whether ID or password was wrong
+        setError('Invalid credentials. Please try again.');
         handleShake();
       }
-    } catch (_) {
-      setError('❌ Network Error');
+    } catch {
+      setError('Network error. Please check your connection.');
       handleShake();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,13 +69,15 @@ export function StaffLogin() {
         <input
           type="text"
           value={staffId}
-          onChange={(e) => setStaffId(e.target.value)}
-          placeholder="e.g. STAFF001 or admin"
+          onChange={(e) => setStaffId(e.target.value.slice(0, MAX_ID_LEN))}
+          placeholder="Enter your Staff ID"
           required
+          autoComplete="username"
+          maxLength={MAX_ID_LEN}
           style={{
             width: '100%', padding: '11px 14px', background: 'var(--bg-surface)',
             border: '1px solid var(--glass-border)', borderRadius: 10,
-            color: 'var(--text-light)', fontSize: '0.95rem', boxSizing: 'border-box'
+            color: 'var(--text-light)', fontSize: '0.95rem', boxSizing: 'border-box',
           }}
         />
       </div>
@@ -60,30 +86,37 @@ export function StaffLogin() {
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value.slice(0, MAX_PASS_LEN))}
           placeholder="Enter password"
           required
+          autoComplete="current-password"
+          maxLength={MAX_PASS_LEN}
           style={{
             width: '100%', padding: '11px 14px', background: 'var(--bg-surface)',
             border: '1px solid var(--glass-border)', borderRadius: 10,
-            color: 'var(--text-light)', fontSize: '0.95rem', boxSizing: 'border-box'
+            color: 'var(--text-light)', fontSize: '0.95rem', boxSizing: 'border-box',
           }}
         />
       </div>
-      {error && <div style={{ color: '#ff4757', fontSize: '0.85rem', marginBottom: '0.8rem', minHeight: '1.2em' }}>{error}</div>}
+      {error && (
+        <div style={{ color: '#ff4757', fontSize: '0.85rem', marginBottom: '0.8rem', minHeight: '1.2em' }}>
+          {/* PHASE 2: error is a static string — never render raw server HTML */}
+          {error}
+        </div>
+      )}
       <button
         type="submit"
+        disabled={loading}
         style={{
           width: '100%', padding: 13, background: 'var(--accent-gold)', color: 'var(--bg-dark)',
           border: 'none', borderRadius: 12, fontSize: '0.95rem', fontWeight: 700,
-          cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase', transition: 'all 0.3s ease'
+          cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: 1,
+          textTransform: 'uppercase', transition: 'all 0.3s ease', opacity: loading ? 0.7 : 1,
         }}
       >
-        Sign In to Kitchen
+        {loading ? 'Signing in…' : 'Sign In to Kitchen'}
       </button>
-      <p style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: '0.8rem', lineHeight: 1.4 }}>
-        Default admin: <strong>admin / admin</strong>
-      </p>
+      {/* VULN FIXED: removed "Default admin: admin / admin" hint — credentials must never appear in UI */}
     </form>
   );
 }

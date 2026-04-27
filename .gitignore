@@ -6,3 +6,16 @@ server.pid
 server_output.log
 .DS_Store
 dist/
+
+# ── SECRETS — NEVER commit these ─────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
