@@ -5,6 +5,7 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
   const [employees, setEmployees] = useState<StaffAccount[]>([]);
   const [estKey, setEstKey] = useState('—');
   const [newKey, setNewKey] = useState('');
+  const [keySuccess, setKeySuccess] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!isOpen) return;
@@ -27,10 +28,9 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
 
   const handleRemove = async (id: string, name: string) => {
     if (!window.confirm(`Remove "${name}" (${id}) from the employee list?\n\nThey will no longer be able to sign in.`)) return;
-    
     try {
       await fetch(`/api/staff/by-id/${encodeURIComponent(id)}`, { method: 'DELETE' });
-      fetchData();
+      await fetchData();
     } catch (_) {}
   };
 
@@ -40,13 +40,18 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
       return;
     }
     try {
-      await fetch('/api/key', {
+      const res = await fetch('/api/key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: newKey })
       });
-      setEstKey(newKey);
-      setNewKey('');
+      if (res.ok) {
+        const { key } = await res.json();
+        setEstKey(key);              // sync with server response
+        setNewKey('');
+        setKeySuccess(true);
+        setTimeout(() => setKeySuccess(false), 3000);
+      }
     } catch (_) {}
   };
 
@@ -64,7 +69,7 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
         <table className="emp-table">
           <thead><tr><th>Name</th><th>Staff ID</th><th>Type</th><th></th></tr></thead>
           <tbody>
-            <tr><td colSpan={4} className="emp-empty" style={{ padding: '1rem' }}>Administrators and built-in Chef roles are hidden and securely protected on the server layer.</td></tr>
+            <tr><td colSpan={4} className="emp-empty">Administrators and built-in Chef roles are securely protected on the server layer.</td></tr>
           </tbody>
         </table>
 
@@ -87,20 +92,31 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
           </tbody>
         </table>
 
-        {/* Note: This effectively also serves Agent 16 (SettingsModal functionality for the Key), keeping it inside Employee Manager as in JS version */}
         <div className="emp-key-box">
-          <label>Current Establishment Key</label>
+          <label>🔑 Current Establishment Key</label>
           <div className="emp-key-value">{estKey}</div>
-          <p style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: 8 }}>Share this key with new staff so they can register. You can change it below.</p>
+          <p style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: 8 }}>
+            Share this key with new staff so they can register. You can change it below.
+          </p>
+
+          {keySuccess && (
+            <div className="emp-key-success">
+              ✅ Establishment key updated successfully!
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <input
               type="text"
               value={newKey}
               onChange={(e) => setNewKey(e.target.value)}
-              placeholder="Enter new key"
+              placeholder="Enter new key (min 4 chars)"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateKey(); }}
               style={{
-                flex: 1, padding: 10, background: 'var(--bg-surface)', border: '1px solid var(--glass-border)',
-                borderRadius: 8, color: 'var(--text-light)', borderStyle: 'solid', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box'
+                flex: 1, padding: 10, background: 'var(--bg-surface)',
+                border: '1px solid var(--glass-border)', borderRadius: 8,
+                color: 'var(--text-light)', fontSize: '0.9rem',
+                outline: 'none', boxSizing: 'border-box'
               }}
             />
             <button
