@@ -1,4 +1,5 @@
-import { useEffect, RefObject } from 'react';
+import { useEffect } from 'react';
+import type { RefObject } from 'react';
 import { useAudio } from './useAudio';
 
 type Direction = 'left' | 'right';

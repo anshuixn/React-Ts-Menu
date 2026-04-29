@@ -1,14 +1,24 @@
 import { useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { StaffLogin } from './StaffLogin';
 import { StaffRegister } from './StaffRegister';
 
+// ============================================================
+// AuthTabs — Staff portal entry. ShieldCheck icon replaces emoji.
+// ============================================================
 export function AuthTabs() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   return (
     <div className="login-overlay">
       <div className="login-card">
-        <div className="login-lock-icon">🔐</div>
+        <div className="login-lock-icon">
+          <ShieldCheck
+            size={40}
+            strokeWidth={1.5}
+            style={{ color: 'var(--accent-gold)', filter: 'drop-shadow(0 0 12px rgba(212,175,55,0.4))' }}
+          />
+        </div>
         <div className="logo" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Aura<span>&</span>Spice</div>
         <p className="login-subtitle" style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
           Staff Kitchen Portal — Authorized Access Only

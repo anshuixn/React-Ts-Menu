@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useAuth } from '../../store/AuthContext';
 import { AuthTabs } from '../staff/AuthTabs';
 

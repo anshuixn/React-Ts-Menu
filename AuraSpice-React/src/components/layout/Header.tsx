@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 // ============================================
@@ -37,7 +37,7 @@ export function Header() {
 
       <nav className={`nav-links${menuOpen ? ' mobile-open' : ''}`} id="nav-links">
         <a href="#home" onClick={closeMenu}>Home</a>
-        <a href="#cuisines" onClick={closeMenu}>Cuisines</a>
+        <Link to="/order" onClick={closeMenu}>Cuisines</Link>
         <a href="#gallery" onClick={closeMenu}>Gallery</a>
         <Link to="/order?table=01" className="btn-outline btn-sm" onClick={closeMenu}>Order Now</Link>
         <Link

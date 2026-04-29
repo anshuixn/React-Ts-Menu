@@ -21,7 +21,7 @@ export function HeroSection() {
           and refreshing beverages — crafted for connoisseurs.
         </p>
         <div className="hero-cta">
-          <a href="#cuisines" className="btn-primary">Explore the Menu</a>
+          <Link to="/order" className="btn-primary">Explore the Menu</Link>
         </div>
       </div>
       <div className="hero-scroll-indicator">

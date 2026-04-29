@@ -1,4 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { Users } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
 import { EmployeeManagerModal } from '../staff/EmployeeManagerModal';
 
@@ -21,25 +23,44 @@ export function StaffLayout({ children }: { children: ReactNode }) {
         }}
       >
         <div className="logo">
-          Aura<span>&</span>Spice <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: 5 }}>Kitchen Portal</span>
+          Aura<span>&</span>Spice{' '}
+          <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: 5 }}>
+            Kitchen Portal
+          </span>
         </div>
         <div className="staff-header-bar" style={{ display: 'flex', alignItems: 'center', gap: 15, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
           <span className="staff-name-badge" style={{ color: 'var(--accent-gold)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
             <img src="/icons/chef.png" alt="Chef" style={{ width: 22, height: 22, objectFit: 'cover', borderRadius: '50%' }} draggable={false} />
             {user?.name}
           </span>
-          <span><span className="pulse-indicator" style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--status-ready)', borderRadius: '50%', marginRight: 8, boxShadow: '0 0 8px var(--status-ready)', animation: 'pulse 1.5s infinite' }}></span> Live Monitoring</span>
+          <span>
+            <span
+              className="pulse-indicator"
+              style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--status-ready)', borderRadius: '50%', marginRight: 8, boxShadow: '0 0 8px var(--status-ready)', animation: 'pulse 1.5s infinite' }}
+            />
+            Live Monitoring
+          </span>
           {isAdmin && (
             <button
               onClick={() => setShowEmpModal(true)}
-              style={{ background: 'transparent', border: '1px solid rgba(212, 175, 55, 0.4)', color: 'var(--accent-gold)', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Inter', fontSize: '0.8rem', transition: 'all 0.3s ease' }}
+              style={{
+                background: 'transparent', border: '1px solid rgba(212, 175, 55, 0.4)',
+                color: 'var(--accent-gold)', padding: '6px 14px', borderRadius: 8,
+                cursor: 'pointer', fontFamily: 'Inter', fontSize: '0.8rem',
+                transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: 6
+              }}
             >
-              👥 Employees
+              <Users size={14} strokeWidth={2} />
+              Employees
             </button>
           )}
           <button
             onClick={logout}
-            style={{ background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Inter', fontSize: '0.8rem', transition: 'all 0.3s ease' }}
+            style={{
+              background: 'transparent', border: '1px solid var(--glass-border)',
+              color: 'var(--text-muted)', padding: '6px 14px', borderRadius: 8,
+              cursor: 'pointer', fontFamily: 'Inter', fontSize: '0.8rem', transition: 'all 0.3s ease'
+            }}
           >
             Logout
           </button>

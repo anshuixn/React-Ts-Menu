@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 
-// ============================================
-// useParallax — ports initParallax() from main.js
-// ============================================
+// ============================================================
+// useParallax — Scroll-driven parallax for [data-parallax] elements
+// ============================================================
 export function useParallax() {
   useEffect(() => {
     const isMobile = 'ontouchstart' in window || window.innerWidth <= 768;
@@ -31,9 +31,21 @@ export function useParallax() {
   }, []);
 }
 
-// ============================================
-// useParticles — ports initParticles() from main.js
-// ============================================
+// ============================================================
+// useParticles — Floating ambient dot particles in the hero.
+// Premium replacement for legacy emoji particles.
+// Uses pure CSS-drawn circles — no images, no emojis.
+// ============================================================
+
+// Spice-colored dot palette (charcoal-gold theme)
+const PARTICLE_COLORS = [
+  'rgba(212,175,55,0.55)',  // gold
+  'rgba(212,175,55,0.3)',   // gold dim
+  'rgba(230,126,34,0.4)',   // saffron
+  'rgba(255,255,255,0.12)', // white glint
+  'rgba(212,175,55,0.18)',  // ghost gold
+];
+
 export function useParticles() {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -41,20 +53,29 @@ export function useParticles() {
     const container = containerRef.current;
     if (!container) return;
 
-    const foodEmojis = ['🍕', '🥟', '🍝', '🥩', '🌶️', '🍜', '🧀', '🫕', '🍖', '🥘', '🍣', '🍛', '🥗', '🍤', '🍲'];
     const isMobile = window.innerWidth <= 768;
-    const count = isMobile ? 8 : 20;
+    const count = isMobile ? 10 : 24;
 
     const spans: HTMLSpanElement[] = [];
     for (let i = 0; i < count; i++) {
       const span = document.createElement('span');
       span.className = 'particle';
-      span.textContent = foodEmojis[Math.floor(Math.random() * foodEmojis.length)];
-      span.style.left = Math.random() * 100 + '%';
-      span.style.fontSize = (Math.random() * (isMobile ? 14 : 18) + (isMobile ? 10 : 14)) + 'px';
-      span.style.animationDuration = (Math.random() * 18 + 12) + 's';
-      span.style.animationDelay = (Math.random() * 12) + 's';
-      span.style.opacity = String(Math.random() * 0.3 + 0.15);
+
+      // Randomised dot sizing (4–14px) and positioning
+      const size = Math.random() * 10 + 4;
+      const color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+
+      span.style.cssText = `
+        left: ${Math.random() * 100}%;
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 50%;
+        background: ${color};
+        box-shadow: 0 0 ${size * 2}px ${color};
+        animation-duration: ${Math.random() * 18 + 12}s;
+        animation-delay: ${Math.random() * 12}s;
+        opacity: 0;
+      `;
       container.appendChild(span);
       spans.push(span);
     }

@@ -9,7 +9,8 @@ import { OrbButton, SuccessOverlay } from '../components/order/OrbButton';
 import { TableSelector } from '../components/order/TableSelector';
 import { useAudio } from '../hooks/useAudio';
 import { useOrderPolling } from '../hooks/useOrderPolling';
-import type { Category, Order } from '../types';
+import { supabase } from '../lib/supabase';
+import type { Category } from '../types';
 
 // ============================================
 // OrderPageInner — needs CartProvider above it
@@ -37,12 +38,19 @@ function OrderPageInner() {
   const { playSwoosh, playChime } = useAudio();
   const { status, trackerData } = useOrderPolling(currentOrderId);
 
-  // Play chime when order status changes to cooking/ready/completed
+  // Play chime when order status changes
   useEffect(() => {
-    if (status && ['cooking', 'ready', 'completed'].includes(status)) {
+    if (!status) return;
+    
+    if (['cooking', 'ready', 'completed'].includes(status)) {
       playChime();
     }
-  }, [status, playChime]);
+    
+    if (status === 'completed' && !statusOpen) {
+      // Auto-open status drawer when completed if not already open
+      setStatusOpen(true);
+    }
+  }, [status, playChime, statusOpen]);
 
   const handleSelectTable = useCallback((table: string) => {
     setTableNumber(table);
@@ -72,22 +80,22 @@ function OrderPageInner() {
     }
 
     const orderId = `ORD-${Date.now()}`;
-    const order: Order = {
-      id: orderId,
-      table: tableNumber,
-      items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
-      total: items.reduce((sum, i) => sum + i.price * i.qty, 0),
-      status: 'new',
-      timestamp: new Date().toISOString(),
-    };
 
     try {
-      await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order),
+      const { error } = await supabase.from('orders').insert({
+        id: orderId,
+        table_number: tableNumber,
+        items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
+        total: items.reduce((sum, i) => sum + i.price * i.qty, 0),
+        status: 'new',
+        created_at: new Date().toISOString(),
       });
-    } catch (_) {}
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('Submission failed:', err.message);
+      alert('Failed to place order. Please ensure the database is connected.');
+      return;
+    }
 
     dispatch({ type: 'CLEAR_CART' });
     setCartOpen(false);
@@ -130,6 +138,7 @@ function OrderPageInner() {
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.35)';
             }}
           >
+
             <img src="/icons/table.png" alt="Table" style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: '50%', flexShrink: 0 }} draggable={false} />
             <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Table</span>
             <span style={{ color: 'var(--accent-gold)', fontWeight: 700, fontSize: '1rem', minWidth: 24 }}>
