@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { consumeRateLimit } from './_lib/rateLimit';
-import { ensureMethod, getClientIp, setRetryAfterHeader } from './_lib/http';
-import { getSupabaseAdmin } from './_lib/supabaseAdmin';
+import { consumeRateLimit } from "./_lib/rateLimit.js";
+import { ensureMethod, getClientIp, setRetryAfterHeader } from "./_lib/http.js";
+import { getSupabaseAdmin } from "./_lib/supabaseAdmin.js";
 
 const PUBLIC_RATE_LIMIT = {
   limit: 60,

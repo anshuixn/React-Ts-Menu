@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { AUTH_SESSION_TTL_SECONDS, getServerEnv } from './env';
-import { clearAuthCookie, getCookieToken } from './http';
-import { supabaseAdmin } from './supabaseAdmin';
+import { AUTH_SESSION_TTL_SECONDS, getServerEnv } from "./env.js";
+import { clearAuthCookie, getCookieToken } from "./http.js";
+import { supabaseAdmin } from "./supabaseAdmin.js";
 
 interface StaffSessionRow {
   staff_id: string;

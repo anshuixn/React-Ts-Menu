@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { getAllowedOrigins, getServerEnv, isProductionEnvironment, requireEnv } from './env';
+import { getAllowedOrigins, getServerEnv, isProductionEnvironment, requireEnv } from "./env.js";
 
 const originalEnv = { ...process.env };
 

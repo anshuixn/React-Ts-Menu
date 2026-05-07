@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ensureMethod } from './_lib/http';
-import { supabaseAdmin } from './_lib/supabaseAdmin';
-import { updateEstablishmentKeySchema } from './_lib/validation';
-import { requireStaffSession } from './_lib/verifyToken';
+import { ensureMethod } from "./_lib/http.js";
+import { supabaseAdmin } from "./_lib/supabaseAdmin.js";
+import { updateEstablishmentKeySchema } from "./_lib/validation.js";
+import { requireStaffSession } from "./_lib/verifyToken.js";
 
 interface SettingRow {
   key: string;

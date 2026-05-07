@@ -5,7 +5,7 @@ import {
   AUTH_SESSION_TTL_SECONDS,
   getAllowedOrigins,
   isProductionEnvironment,
-} from './env';
+} from "./env.js";
 
 const DEFAULT_ALLOWED_HEADERS = ['Authorization', 'Content-Type'];
 

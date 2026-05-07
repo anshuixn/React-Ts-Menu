@@ -24,7 +24,7 @@
  * all anon/user access while still allowing our serverless functions.
  */
 
-import { supabaseAdmin } from './supabaseAdmin';
+import { supabaseAdmin } from "./supabaseAdmin.js";
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 

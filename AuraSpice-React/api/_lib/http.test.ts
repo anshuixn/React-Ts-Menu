@@ -10,7 +10,7 @@ import {
   setAuthCookie,
   setRetryAfterHeader,
   setSecurityHeaders,
-} from './http';
+} from "./http.js";
 
 const originalEnv = { ...process.env };
 

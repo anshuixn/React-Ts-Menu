@@ -11,7 +11,7 @@ vi.mock('./supabaseAdmin', () => ({
   },
 }));
 
-import { verifyToken } from './verifyToken';
+import { verifyToken } from "./verifyToken.js";
 
 function createSessionSelectResult(session: { staff_id: string; expires_at: string } | null) {
   return {

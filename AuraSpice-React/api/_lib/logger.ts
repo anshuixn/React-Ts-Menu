@@ -2,7 +2,7 @@
  * logger.ts — Structured server-side logging with optional Sentry capture.
  *
  * Usage in API handlers:
- *   import { logError } from './_lib/logger';
+ *   import { logError } from "./_lib/logger.js";
  *   logError(err, { handler: 'orders/create', orderId });
  */
 import * as Sentry from '@sentry/node';

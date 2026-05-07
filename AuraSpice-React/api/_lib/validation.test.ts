@@ -5,7 +5,7 @@ import {
   registerRequestSchema,
   updateOrderSchema,
   updateEstablishmentKeySchema,
-} from './validation';
+} from "./validation.js";
 
 describe('validation schemas', () => {
   it('accepts a valid login payload', () => {
