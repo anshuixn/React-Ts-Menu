@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-// ============================================
-// Header — Agent 13
-// Ports initHeader() + initMobileNav() from main.js
-// ============================================
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,9 +33,9 @@ export function Header() {
       </button>
 
       <nav className={`nav-links${menuOpen ? ' mobile-open' : ''}`} id="nav-links">
-        <a href="#home" onClick={closeMenu}>Home</a>
+        <Link to="/" onClick={closeMenu}>Home</Link>
         <Link to="/order" onClick={closeMenu}>Cuisines</Link>
-        <a href="#gallery" onClick={closeMenu}>Gallery</a>
+        <Link to="/#gallery" onClick={closeMenu}>Gallery</Link>
         <Link to="/order?table=01" className="btn-outline btn-sm" onClick={closeMenu}>Order Now</Link>
         <Link
           to="/staff"

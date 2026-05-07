@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Users } from 'lucide-react';
-import { useAuth } from '../../store/AuthContext';
-import { EmployeeManagerModal } from '../staff/EmployeeManagerModal';
+import { useAuth } from '../../store/useAuth';
+
+const EmployeeManagerModal = lazy(async () => {
+  const module = await import('../staff/EmployeeManagerModal');
+  return { default: module.EmployeeManagerModal };
+});
 
 export function StaffLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [showEmpModal, setShowEmpModal] = useState(false);
 
-  const isAdmin = user?.id.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'admin';
+  // Role-based check only — server assigns the role during registration/seed
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
 
   return (
     <div className="staff-portal" style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingTop: 80 }}>
@@ -72,7 +77,11 @@ export function StaffLayout({ children }: { children: ReactNode }) {
         {children}
       </div>
 
-      {isAdmin && <EmployeeManagerModal isOpen={showEmpModal} onClose={() => setShowEmpModal(false)} />}
+      {isAdmin && (
+        <Suspense fallback={null}>
+          <EmployeeManagerModal isOpen={showEmpModal} onClose={() => setShowEmpModal(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

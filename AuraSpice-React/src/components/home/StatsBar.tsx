@@ -1,9 +1,5 @@
 import { useCountUp } from '../../hooks/useCountUp';
 
-// ============================================
-// StatsBar — Agent 11
-// Uses Bebas Neue via style.css .stat-item h3
-// ============================================
 function StatItem({ count, label }: { count: number; label: string }) {
   const { ref, displayValue } = useCountUp(count);
   return (

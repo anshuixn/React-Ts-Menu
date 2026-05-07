@@ -108,7 +108,7 @@ The Establishment Key is required to **register new staff accounts** from the Re
 
 **Default Key:**
 ```
-AURA2024
+AURASPICE_DEFAULT_KEY
 ```
 
 **To change the key:**

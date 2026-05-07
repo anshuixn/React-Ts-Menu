@@ -1,8 +1,5 @@
 import type { Category } from '../../types';
 
-// ============================================
-// FilterTabs — Agent 5 (emoji → image icons)
-// ============================================
 
 interface TabDef {
   label: string;

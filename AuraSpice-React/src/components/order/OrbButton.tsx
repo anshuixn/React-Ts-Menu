@@ -1,7 +1,4 @@
-// ============================================
-// OrbButton — Agent 5 (emoji → image icons)
-// Floating orb buttons (cart + status)
-// ============================================
+
 interface OrbButtonProps {
   id: string;
   icon: string;       // now an image path e.g. "/icons/cart.png"
@@ -47,9 +44,7 @@ export function OrbButton({ id, icon, badge, glowClass, badgeId, ariaLabel, aria
   );
 }
 
-// ============================================
-// SuccessOverlay — Agent 5
-// ============================================
+
 export function SuccessOverlay({ active }: { active: boolean }) {
   return (
     <div id="success-overlay" className={`success-overlay${active ? ' active' : ''}`}>

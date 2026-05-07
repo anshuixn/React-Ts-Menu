@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../store/AuthContext';
+import { useAuth } from '../../store/useAuth';
 
 // ============================================================
 // PHASE 2 — Input length caps prevent oversized payloads.
@@ -9,6 +9,7 @@ import { useAuth } from '../../store/AuthContext';
 
 const MAX_ID_LEN   = 32;
 const MAX_PASS_LEN = 128;
+const MIN_PASS_LEN = 8;
 
 export function StaffLogin() {
   const [staffId,  setStaffId]  = useState('');
@@ -31,6 +32,12 @@ export function StaffLogin() {
     // Client-side guard — server validates too
     if (!staffId || !password) {
       setError('Please enter both Staff ID and password.');
+      handleShake();
+      return;
+    }
+
+    if (password.length < MIN_PASS_LEN) {
+      setError(`Password must be at least ${MIN_PASS_LEN} characters.`);
       handleShake();
       return;
     }
@@ -90,6 +97,7 @@ export function StaffLogin() {
           placeholder="Enter password"
           required
           autoComplete="current-password"
+          minLength={MIN_PASS_LEN}
           maxLength={MAX_PASS_LEN}
           style={{
             width: '100%', padding: '11px 14px', background: 'var(--bg-surface)',

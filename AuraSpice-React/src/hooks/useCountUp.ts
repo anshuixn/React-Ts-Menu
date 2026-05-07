@@ -1,9 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-// ============================================
-// useCountUp — Agent 7
-// Ports initCountUpStats() + animateCount() from main.js
-// ============================================
+/** Animated count-up hook — triggers when element scrolls into view. */
 export function useCountUp(target: number): { ref: React.RefObject<HTMLHeadingElement | null>; displayValue: string } {
   const [displayValue, setDisplayValue] = useState<string>('0');
   const ref = useRef<HTMLHeadingElement>(null);

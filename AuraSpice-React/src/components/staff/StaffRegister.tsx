@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 // ============================================================
 // PHASE 2 — Strict client-side validation before sending.
-// Password minimum lifted from 4 → 6 chars (matches server).
+// Password and establishment key minimums match the server validator.
 // All inputs capped at max lengths.
 // ============================================================
 
@@ -11,6 +11,8 @@ const MAX_ID_LEN   = 32;
 const MAX_PASS_LEN = 128;
 const MAX_KEY_LEN  = 128;
 const STAFF_ID_RE  = /^[a-zA-Z0-9_]{1,32}$/;
+const MIN_PASS_LEN = 8;
+const MIN_KEY_LEN  = 12;
 
 export function StaffRegister({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   const [name,     setName]     = useState('');
@@ -40,11 +42,11 @@ export function StaffRegister({ onSwitchToLogin }: { onSwitchToLogin: () => void
     if (!STAFF_ID_RE.test(staffId)) {
       setError('Staff ID must be 1–32 alphanumeric characters or underscores.'); handleShake(); return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.'); handleShake(); return;
+    if (password.length < MIN_PASS_LEN) {
+      setError(`Password must be at least ${MIN_PASS_LEN} characters.`); handleShake(); return;
     }
-    if (key.length < 6) {
-      setError('Establishment Key must be at least 6 characters.'); handleShake(); return;
+    if (key.length < MIN_KEY_LEN) {
+      setError(`Establishment Key must be at least ${MIN_KEY_LEN} characters.`); handleShake(); return;
     }
 
     const newAccount = {
@@ -57,7 +59,7 @@ export function StaffRegister({ onSwitchToLogin }: { onSwitchToLogin: () => void
 
     setLoading(true);
     try {
-      const res = await fetch('/api/staff', {
+      const res = await fetch('/api/staff/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ account: newAccount, key }),
@@ -101,7 +103,7 @@ export function StaffRegister({ onSwitchToLogin }: { onSwitchToLogin: () => void
       </div>
       <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
         <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 1 }}>Choose Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value.slice(0, MAX_PASS_LEN))} placeholder="Minimum 6 characters" required minLength={6} maxLength={MAX_PASS_LEN} autoComplete="new-password" style={inputStyle} />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value.slice(0, MAX_PASS_LEN))} placeholder={`Minimum ${MIN_PASS_LEN} characters`} required minLength={MIN_PASS_LEN} maxLength={MAX_PASS_LEN} autoComplete="new-password" style={inputStyle} />
       </div>
       <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
         <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--accent-gold)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 1 }}>Establishment Key</label>
@@ -133,7 +135,7 @@ export function StaffRegister({ onSwitchToLogin }: { onSwitchToLogin: () => void
         {loading ? 'Creating…' : 'Create Staff Account'}
       </button>
       <p style={{ color: 'var(--text-dim)', fontSize: '0.72rem', marginTop: '0.8rem', lineHeight: 1.4 }}>
-        You must enter the correct Establishment Key provided by your restaurant admin to register.
+        You must enter the current establishment key provided by your restaurant admin to register.
       </p>
     </form>
   );

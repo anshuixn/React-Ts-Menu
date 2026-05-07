@@ -1,94 +1,130 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { AuthContext } from './auth-context';
 import type { StaffAccount } from '../types';
 
-// ============================================================
-// PHASE 5 — Session stored in memory (NOT localStorage).
-// localStorage is accessible by any JS on the page (XSS risk).
-// sessionStorage clears on tab close — acceptable for staff portal.
-// The token is sent as a custom header, NOT a cookie, to avoid CSRF.
-// ============================================================
-
-interface AuthContextType {
-  user: StaffAccount | null;
-  token: string | null;
-  login: (account: StaffAccount, token: string) => void;
-  logout: () => void;
-  loading: boolean;
-  /** Convenience wrapper: fetch with X-Staff-Token header pre-attached */
-  authFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+interface MeResponse {
+  success: boolean;
+  account?: StaffAccount;
+  token?: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Key for session persistence — cleared on tab close automatically
-const SESSION_KEY = 'auraStaffSession';
-const TOKEN_KEY   = 'auraStaffToken';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user,    setUser]    = useState<StaffAccount | null>(null);
-  const [token,   setToken]   = useState<string | null>(null);
+  const [user, setUser] = useState<StaffAccount | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // On mount, verify session via HttpOnly cookie
   useEffect(() => {
-    // Restore session from sessionStorage on page reload
-    try {
-      const storedSession = sessionStorage.getItem(SESSION_KEY);
-      const storedToken   = sessionStorage.getItem(TOKEN_KEY);
-      if (storedSession && storedToken) {
-        setUser(JSON.parse(storedSession));
-        setToken(storedToken);
+    let cancelled = false;
+
+    const verifySession = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      try {
+        const response = await fetch('/api/staff/me', {
+          credentials: 'include',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          if (!cancelled) {
+            setUser(null);
+            setToken(null);
+          }
+          return;
+        }
+
+        const payload = (await response.json()) as MeResponse;
+
+        if (!cancelled && payload.success && payload.account) {
+          setUser(payload.account);
+          setToken(payload.token ?? null);
+        }
+      } catch {
+        // Network error — treat as not authenticated
+        if (!cancelled) {
+          setUser(null);
+          setToken(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    } catch {
-      sessionStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem(TOKEN_KEY);
-    }
-    setLoading(false);
+    };
+
+    void verifySession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const clearSession = useCallback(() => {
+    setUser(null);
+    setToken(null);
   }, []);
 
   const login = useCallback((account: StaffAccount, newToken: string) => {
     setUser(account);
     setToken(newToken);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(account));
-    sessionStorage.setItem(TOKEN_KEY, newToken);
   }, []);
 
   const logout = useCallback(async () => {
-    // Tell server to invalidate the token
-    if (token) {
-      try {
-        await fetch('/api/staff/logout', {
-          method: 'POST',
-          headers: { 'X-Staff-Token': token },
-        });
-      } catch {
-        // Silently ignore — local session will be cleared regardless
-      }
-    }
-    setUser(null);
-    setToken(null);
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
-  }, [token]);
+    try {
+      const headers = new Headers();
 
-  /** Attaches the auth token header to every authenticated fetch call */
-  const authFetch = useCallback((input: RequestInfo, init: RequestInit = {}) => {
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+
+      await fetch('/api/staff/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+      });
+    } catch {
+      // Best-effort server logout; local session is still cleared below.
+    }
+
+    clearSession();
+  }, [clearSession, token]);
+
+  const authFetch = useCallback(async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const headers = new Headers(init.headers);
-    if (token) headers.set('X-Staff-Token', token);
-    return fetch(input, { ...init, headers });
-  }, [token]);
+
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const response = await fetch(input, {
+      ...init,
+      credentials: 'include',
+      headers,
+    });
+
+    if (response.status === 401) {
+      clearSession();
+    }
+
+    return response;
+  }, [clearSession, token]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, authFetch }}>
-      {!loading && children}
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        loading,
+        authFetch,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

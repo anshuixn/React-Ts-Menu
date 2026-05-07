@@ -1,6 +1,6 @@
 import { useKanbanDrag } from '../../hooks/useKanbanDrag';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import type { Order, OrderStatus } from '../../types';
-import { useState, useEffect } from 'react';
 
 const STATUSES: { id: OrderStatus; title: string; color: string }[] = [
   { id: 'new', title: 'Pending', color: 'var(--status-new)' },
@@ -9,19 +9,9 @@ const STATUSES: { id: OrderStatus; title: string; color: string }[] = [
   { id: 'completed', title: 'Completed', color: 'var(--text-dim)' },
 ];
 
-function useIsMobile(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= breakpoint);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, [breakpoint]);
-  return isMobile;
-}
-
 function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: {
   order: Order;
-  dragProps: any;
+  dragProps: React.HTMLAttributes<HTMLDivElement>;
   onAction: (id: string, s: OrderStatus) => void;
   disableDrag: boolean;
   isBeingDragged: boolean;
@@ -36,7 +26,7 @@ function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: 
     >
       <div className="order-header">
         <span className="table-number">
-          <img src="/icons/table.png" alt="Table" style={{ width: 18, height: 18, objectFit: 'cover', borderRadius: '50%', verticalAlign: 'middle', marginRight: 4 }} draggable={false} />
+          <img src="/icons/table.png" alt="" style={{ width: 18, height: 18, objectFit: 'cover', borderRadius: '50%', verticalAlign: 'middle', marginRight: 4 }} draggable={false} />
           Table {order.table}
         </span>
         <span className="order-time">{time}</span>
@@ -51,13 +41,13 @@ function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: 
       <div className="total-price">₹{Math.round(order.total)}</div>
 
       {order.status === 'new' && (
-        <button className="status-action-btn start-cooking" onClick={() => onAction(order.id, 'cooking')}>▶ Start Cooking</button>
+        <button className="status-action-btn start-cooking" onClick={() => onAction(order.id, 'cooking')} aria-label={`Start cooking order for table ${order.table}`}>▶ Start Cooking</button>
       )}
       {order.status === 'cooking' && (
-        <button className="status-action-btn mark-ready" onClick={() => onAction(order.id, 'ready')}>✓ Mark Ready</button>
+        <button className="status-action-btn mark-ready" onClick={() => onAction(order.id, 'ready')} aria-label={`Mark order for table ${order.table} as ready`}>✓ Mark Ready</button>
       )}
       {order.status === 'ready' && (
-        <button className="status-action-btn mark-complete" onClick={() => onAction(order.id, 'completed')}>✓ Complete & Bill</button>
+        <button className="status-action-btn mark-complete" onClick={() => onAction(order.id, 'completed')} aria-label={`Complete order for table ${order.table}`}>✓ Complete & Bill</button>
       )}
     </div>
   );
@@ -70,7 +60,8 @@ export function KanbanBoard({ orders, onUpdateStatus }: { orders: Order[]; onUpd
   return (
     <div className="board-container">
       {STATUSES.map((col) => {
-        const colOrders = orders.filter((o) => o.status === col.id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        // Sort ascending by timestamp so oldest (most urgent) orders appear first
+        const colOrders = orders.filter((o) => o.status === col.id).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         return (
           <div

@@ -3,13 +3,10 @@ import type { OrderStatus, TrackerState } from '../../types';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
-// ============================================================
-// AuraSpice: Premium Animated Status Drawer — Phase 3
-// ・ Parallax hero image via useMotionValue (scroll inside drawer)
-// ・ Spring-staggered stepper entrance animations
-// ・ Animated vertical connector line fill
-// ・ Canvas-confetti celebration on "completed" mount
-// ============================================================
+/**
+ * Premium animated order status drawer with parallax hero,
+ * spring-staggered stepper, and confetti celebration.
+ */
 
 const STEP_ORDER: OrderStatus[] = ['new', 'cooking', 'ready', 'completed'];
 

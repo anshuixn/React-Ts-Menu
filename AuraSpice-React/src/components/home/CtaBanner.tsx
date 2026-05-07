@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// ============================================
-// CtaBanner — Agent 11
-// ============================================
+
 export function CtaBanner() {
   return (
     <section className="cta-banner">

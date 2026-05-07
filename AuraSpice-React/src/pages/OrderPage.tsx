@@ -1,26 +1,25 @@
-import { useState, useCallback, useEffect } from 'react';
+import { Suspense, lazy, useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CartProvider, useCart } from '../store/cartStore';
+import { CartProvider } from '../store/cartStore';
+import { useCart } from '../store/useCart';
 import { FilterTabs } from '../components/order/FilterTabs';
 import { MenuGrid } from '../components/order/MenuGrid';
 import { CartDrawer } from '../components/order/CartDrawer';
-import { StatusDrawer } from '../components/order/StatusDrawer';
 import { OrbButton, SuccessOverlay } from '../components/order/OrbButton';
 import { TableSelector } from '../components/order/TableSelector';
 import { useAudio } from '../hooks/useAudio';
 import { useOrderPolling } from '../hooks/useOrderPolling';
-import { supabase } from '../lib/supabase';
 import type { Category } from '../types';
 
-// ============================================
-// OrderPageInner — needs CartProvider above it
-// Agent 18
-// ============================================
+const StatusDrawer = lazy(async () => {
+  const module = await import('../components/order/StatusDrawer');
+  return { default: module.StatusDrawer };
+});
+
 function OrderPageInner() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTable = searchParams.get('table');
 
-  // If no table param in URL → show the selector immediately
   const [tableNumber, setTableNumber] = useState<string>(initialTable ?? '');
   const [showTableSelector, setShowTableSelector] = useState<boolean>(!initialTable);
 
@@ -33,29 +32,33 @@ function OrderPageInner() {
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(
     () => sessionStorage.getItem('currentOrderId')
   );
+  const [currentTrackingToken, setCurrentTrackingToken] = useState<string | null>(
+    () => sessionStorage.getItem('currentTrackingToken')
+  );
 
   const { cart, dispatch, totalQty } = useCart();
   const { playSwoosh, playChime } = useAudio();
-  const { status, trackerData } = useOrderPolling(currentOrderId);
+  const { status, trackerData } = useOrderPolling(currentOrderId, tableNumber || null, currentTrackingToken);
+  const prevStatusRef = useRef<string | null>(null);
 
-  // Play chime when order status changes
   useEffect(() => {
     if (!status) return;
     
-    if (['cooking', 'ready', 'completed'].includes(status)) {
-      playChime();
+    if (prevStatusRef.current && prevStatusRef.current !== status) {
+      if (['cooking', 'ready', 'completed'].includes(status)) {
+        playChime();
+      }
+      
+      if (status === 'completed' && !statusOpen) {
+        setStatusOpen(true);
+      }
     }
-    
-    if (status === 'completed' && !statusOpen) {
-      // Auto-open status drawer when completed if not already open
-      setStatusOpen(true);
-    }
+    prevStatusRef.current = status;
   }, [status, playChime, statusOpen]);
 
   const handleSelectTable = useCallback((table: string) => {
     setTableNumber(table);
     setShowTableSelector(false);
-    // Sync to URL so the QR link stays shareable
     setSearchParams((prev) => { prev.set('table', table); return prev; }, { replace: true });
   }, [setSearchParams]);
 
@@ -79,45 +82,62 @@ function OrderPageInner() {
       return;
     }
 
-    const orderId = `ORD-${Date.now()}`;
-
     try {
-      const { error } = await supabase.from('orders').insert({
-        id: orderId,
-        table_number: tableNumber,
-        items: items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
-        total: items.reduce((sum, i) => sum + i.price * i.qty, 0),
-        status: 'new',
-        created_at: new Date().toISOString(),
+      const response = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table_number: tableNumber,
+          items: items.map((i) => ({ id: i.id, qty: i.qty })),
+        }),
       });
-      if (error) throw error;
-    } catch (err: any) {
-      console.error('Submission failed:', err.message);
-      alert('Failed to place order. Please ensure the database is connected.');
-      return;
+
+      const payload = await response.json() as {
+        success: boolean;
+        message?: string;
+        order?: { id: string; tracking_token: string };
+      };
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message ?? 'Unable to place order');
+      }
+
+      const orderId = payload.order?.id;
+      const trackingToken = payload.order?.tracking_token;
+      if (!orderId || !trackingToken) {
+        throw new Error('Invalid response from server');
+      }
+
+      dispatch({ type: 'CLEAR_CART' });
+      // Clear any previous order tracking state before setting the new one
+      sessionStorage.removeItem('currentOrderId');
+      sessionStorage.removeItem('currentTrackingToken');
+      setCartOpen(false);
+      setCurrentOrderId(orderId);
+      setCurrentTrackingToken(trackingToken);
+      sessionStorage.setItem('currentOrderId', orderId);
+      sessionStorage.setItem('currentTrackingToken', trackingToken);
+
+      setShowOverlay(true);
+      setTimeout(() => setShowOverlay(false), 2500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to place order';
+      alert(message);
     }
-
-    dispatch({ type: 'CLEAR_CART' });
-    setCartOpen(false);
-    setCurrentOrderId(orderId);
-    sessionStorage.setItem('currentOrderId', orderId);
-
-    setShowOverlay(true);
-    setTimeout(() => setShowOverlay(false), 2500);
   }, [cart, dispatch, tableNumber]);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingTop: 80 }}>
+    <main style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingTop: 80 }}>
       {/* Page Header */}
-      <div className="order-page-header" style={{ padding: '30px 5% 20px', borderBottom: '1px solid var(--glass-border)' }}>
+      <header className="order-page-header" style={{ padding: '30px 5% 20px', borderBottom: '1px solid var(--glass-border)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div className="logo" style={{ fontSize: '1.4rem' }}>Aura<span>&</span>Spice</div>
 
-          {/* Table badge — clickable to change table */}
           <button
             id="table-selector-btn"
             onClick={() => setShowTableSelector(true)}
             title="Tap to change table"
+            aria-label={`Table ${tableNumber || 'not selected'}. Tap to change.`}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -138,8 +158,7 @@ function OrderPageInner() {
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.35)';
             }}
           >
-
-            <img src="/icons/table.png" alt="Table" style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: '50%', flexShrink: 0 }} draggable={false} />
+            <img src="/icons/table.png" alt="" style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: '50%', flexShrink: 0 }} draggable={false} />
             <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Table</span>
             <span style={{ color: 'var(--accent-gold)', fontWeight: 700, fontSize: '1rem', minWidth: 24 }}>
               {tableNumber ? parseInt(tableNumber) : '—'}
@@ -147,17 +166,17 @@ function OrderPageInner() {
             <span style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>✎</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Filter Tabs */}
-      <div style={{ padding: '20px 5%', maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: '20px 5%', maxWidth: 1200, margin: '0 auto' }}>
         <FilterTabs active={activeFilter} onChange={setActiveFilter} />
-      </div>
+      </section>
 
       {/* Menu Grid */}
-      <div style={{ padding: '0 5% 120px', maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: '0 5% 120px', maxWidth: 1200, margin: '0 auto' }}>
         <MenuGrid filter={activeFilter} />
-      </div>
+      </section>
 
       {/* Floating Orbs */}
       <OrbButton
@@ -195,7 +214,9 @@ function OrderPageInner() {
 
       {/* Drawers */}
       <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} onCheckout={submitOrder} />
-      <StatusDrawer isOpen={statusOpen} onClose={() => setStatusOpen(false)} status={status} trackerData={trackerData} />
+      <Suspense fallback={null}>
+        <StatusDrawer isOpen={statusOpen} onClose={() => setStatusOpen(false)} status={status} trackerData={trackerData} />
+      </Suspense>
 
       {/* Success Overlay */}
       <SuccessOverlay active={showOverlay} />
@@ -206,7 +227,7 @@ function OrderPageInner() {
         current={tableNumber}
         onSelect={handleSelectTable}
       />
-    </div>
+    </main>
   );
 }
 

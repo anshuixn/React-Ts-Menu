@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { isSupabaseConfigured } from '../lib/envValidation';
+import { realtimeManager } from '../lib/realtimeManager';
 import type { OrderStatus, TrackerState } from '../types';
-import { supabase } from '../lib/supabase';
 
-// ============================================================
-// AuraSpice: Client-Side Realtime Tracking
-// Instantly updates the customer's phone when a chef moves their order.
-// Uses granular UPDATE subscription — no polling, no refetch.
-// ============================================================
 
 const trackerStates: Record<OrderStatus, TrackerState> = {
   new: {
@@ -31,55 +27,84 @@ const trackerStates: Record<OrderStatus, TrackerState> = {
   },
 };
 
-export function useOrderPolling(currentOrderId: string | null) {
+interface OrderStatusResponse {
+  success?: boolean;
+  message?: string;
+  status?: OrderStatus;
+}
+
+export function useOrderPolling(
+  currentOrderId: string | null,
+  tableNumber: string | null,
+  trackingToken: string | null = null,
+) {
   const [status, setStatus] = useState<OrderStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const initialFetchDone = useRef(false);
 
-  const fetchStatus = useCallback(async () => {
-    if (!currentOrderId) return;
-    const { data, error } = await supabase
-      .from('orders')
-      .select('status')
-      .eq('id', currentOrderId)
-      .single();
-    if (!error && data) {
-      setStatus(data.status as OrderStatus);
-    }
-  }, [currentOrderId]);
-
+  // Initial HTTP fetch to hydrate state
   useEffect(() => {
-    if (!currentOrderId) return;
+    if (!currentOrderId || !tableNumber) {
+      setStatus(null);
+      setIsConnected(false);
+      initialFetchDone.current = false;
+      return;
+    }
 
-    // 1. Initial fetch
-    fetchStatus();
+    let isCancelled = false;
 
-    // 2. Subscribe to Realtime — UPDATE only for THIS specific order
-    //    Granular: status is patched directly from the payload, no refetch.
-    const channel = supabase
-      .channel(`order_track_${currentOrderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${currentOrderId}`,
-        },
-        (payload) => {
-          // Direct patch — O(1), zero network round-trip
-          setStatus(payload.new.status as OrderStatus);
+    const fetchStatus = async () => {
+      try {
+        const query = new URLSearchParams({ id: currentOrderId, table: tableNumber });
+        if (trackingToken) query.set('token', trackingToken);
+        const response = await fetch(`/api/orders/status?${query.toString()}`);
+        const payload = await response.json() as OrderStatusResponse;
+
+        if (!response.ok || !payload.success || !payload.status) {
+          throw new Error(payload.message ?? 'Unable to fetch order status');
         }
-      )
-      .subscribe((state) => {
-        setIsConnected(state === 'SUBSCRIBED');
-      });
+
+        if (!isCancelled) {
+          setStatus(payload.status);
+          setIsConnected(true);
+          initialFetchDone.current = true;
+        }
+      } catch {
+        if (!isCancelled) {
+          setIsConnected(false);
+        }
+      }
+    };
+
+    void fetchStatus();
 
     return () => {
-      supabase.removeChannel(channel);
-      setIsConnected(false);
+      isCancelled = true;
     };
-  }, [currentOrderId, fetchStatus]);
+  }, [currentOrderId, tableNumber, trackingToken]);
 
-  const trackerData = status ? trackerStates[status] : null;
+  // Supabase Realtime subscription for live updates (only when credentials are real)
+  useEffect(() => {
+    if (!currentOrderId || !isSupabaseConfigured()) {
+      return;
+    }
+
+    const unsubscribe = realtimeManager.subscribe({
+      orderId: currentOrderId,
+      events: ['UPDATE'],
+      callback: ({ newRecord }) => {
+        const newStatus = newRecord['status'] as OrderStatus | undefined;
+        if (newStatus) {
+          setStatus(newStatus);
+          setIsConnected(true);
+        }
+      },
+    });
+
+    return unsubscribe;
+  }, [currentOrderId]);
+
+  const trackerData = useMemo(() => (status ? trackerStates[status] : null), [status]);
+
   return { status, trackerData, isConnected };
 }

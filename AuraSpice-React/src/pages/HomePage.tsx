@@ -9,9 +9,7 @@ import { GallerySection } from '../components/home/GallerySection';
 import { CtaBanner } from '../components/home/CtaBanner';
 import type { CuisineSectionProps } from '../types';
 
-// ============================================
-// HomePage — Agent 18
-// ============================================
+
 const cuisines: CuisineSectionProps[] = [
   {
     chapter: 'Chapter I', title: 'Wok & Fire', reversed: false,

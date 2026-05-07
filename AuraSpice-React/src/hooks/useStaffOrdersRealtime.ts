@@ -1,141 +1,160 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { realtimeManager } from '../lib/realtimeManager';
 import type { Order, OrderStatus } from '../types';
 import { useAudio } from './useAudio';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../store/useAuth';
 
-// ============================================================
-// AuraSpice: Supabase Realtime Hook (Granular Event Engine)
-// Replaces "refetch everything" with surgical INSERT/UPDATE/DELETE
-// patch operations — O(1) updates, instant cross-device sync.
-// ============================================================
+interface OrdersResponse {
+  success?: boolean;
+  message?: string;
+  orders?: Order[];
+}
 
-/** Map a raw Supabase row → our Order interface */
-function rowToOrder(o: any): Order {
-  return {
-    id: o.id,
-    table: o.table_number,
-    items: o.items,
-    total: o.total,
-    status: o.status,
-    timestamp: o.created_at,
-  };
+interface OrderMutationResponse {
+  success?: boolean;
+  message?: string;
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unexpected error';
 }
 
 export function useStaffOrdersRealtime() {
+  const { authFetch, user } = useAuth();
+  const { playChime } = useAudio();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { playChime } = useAudio();
-  const previousCountRef = useRef(0);
+  const previousOrderIdsRef = useRef<Set<string>>(new Set());
 
-  // ── Initial full fetch ────────────────────────────────────
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (showLoadingState = false) => {
+    if (!user) {
+      setOrders([]);
+      setLoading(false);
+      setIsConnected(false);
+      return;
+    }
+
+    if (showLoadingState) {
+      setLoading(true);
+    }
+
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await authFetch('/api/orders');
+      const payload = await response.json() as OrdersResponse;
 
-      if (error) throw error;
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message ?? 'Unable to load orders');
+      }
 
-      const formattedOrders = (data || []).map(rowToOrder);
-      setOrders(formattedOrders);
-      previousCountRef.current = formattedOrders.length;
-    } catch (err: any) {
-      setError(err.message);
+      const nextOrders = payload.orders ?? [];
+      const previousIds = previousOrderIdsRef.current;
+      const nextIds = new Set(nextOrders.map((order) => order.id));
+      const hasNewOrder =
+        previousIds.size > 0 &&
+        nextOrders.some((order) => !previousIds.has(order.id));
+
+      if (hasNewOrder) {
+        playChime();
+      }
+
+      previousOrderIdsRef.current = nextIds;
+      setOrders(nextOrders);
+      setError(null);
+      setIsConnected(true);
+    } catch (fetchError) {
+      setError(getErrorMessage(fetchError));
+      setIsConnected(false);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authFetch, playChime, user]);
 
+  // Initial HTTP fetch to hydrate state
   useEffect(() => {
-    fetchOrders();
+    if (!user) {
+      return;
+    }
 
-    // ── Granular Realtime subscription ───────────────────────
-    // INSERT  → prepend the new row; play chime
-    // UPDATE  → patch the single changed order in-place (no refetch!)
-    // DELETE  → filter out the removed order
-    const channel = supabase
-      .channel('staff_orders_rt')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders' },
-        (payload) => {
-          const newOrder = rowToOrder(payload.new);
-          setOrders((prev) => [newOrder, ...prev]);
-          previousCountRef.current += 1;
-          playChime();
+    void fetchOrders(true);
+  }, [fetchOrders, user]);
+
+  // Shared realtime subscription — one channel for the whole app
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = realtimeManager.subscribe({
+      orderId: '*',
+      events: ['INSERT', 'UPDATE', 'DELETE'],
+      callback: ({ event, newRecord, orderId }) => {
+        if (event === 'INSERT' || event === 'DELETE') {
+          // Re-fetch full list to get server-normalized data
+          void fetchOrders(false);
+        } else if (event === 'UPDATE' && orderId) {
+          const updatedStatus = newRecord['status'] as OrderStatus | undefined;
+          if (updatedStatus) {
+            setOrders((current) =>
+              current.map((o) =>
+                o.id === orderId ? { ...o, status: updatedStatus } : o,
+              ),
+            );
+          }
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders' },
-        (payload) => {
-          const updatedOrder = rowToOrder(payload.new);
-          setOrders((prev) =>
-            prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
-          );
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'orders' },
-        (payload) => {
-          setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
-          previousCountRef.current = Math.max(0, previousCountRef.current - 1);
-        }
-      )
-      .subscribe((state) => {
-        setIsConnected(state === 'SUBSCRIBED');
+      },
+    });
+
+    return unsubscribe;
+  }, [fetchOrders, user]);
+
+  const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
+    const previousOrders = orders;
+
+    setOrders((currentOrders) =>
+      currentOrders.map((order) => (order.id === id ? { ...order, status } : order)),
+    );
+
+    try {
+      const response = await authFetch('/api/orders/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
       });
 
-    return () => {
-      supabase.removeChannel(channel);
-      setIsConnected(false);
-    };
-  }, [fetchOrders, playChime]);
+      const payload = await response.json() as OrderMutationResponse;
 
-  // ── Status update (optimistic + server confirm) ───────────
-  const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
-    // Optimistic UI: patch local state immediately
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status } : o))
-    );
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', id);
-
-      if (error) {
-        // Rollback on error by re-fetching
-        console.error('Status update failed, rolling back:', error.message);
-        fetchOrders();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message ?? 'Unable to update order');
       }
-      // On success: the Realtime UPDATE event will confirm the change.
-    } catch (err: any) {
-      console.error('Update failed:', err.message);
-      fetchOrders();
-    }
-  }, [fetchOrders]);
 
-  // ── Clear all completed orders ────────────────────────────
+      setError(null);
+    } catch (updateError) {
+      setOrders(previousOrders);
+      setError(getErrorMessage(updateError));
+    }
+  }, [authFetch, orders]);
+
   const clearOrders = useCallback(async () => {
-    if (!window.confirm('Clear ALL orders? This cannot be undone.')) return;
     try {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .neq('id', '0'); // Delete all rows
+      const response = await authFetch('/api/orders/clear', {
+        method: 'POST',
+      });
 
-      if (error) throw error;
-      setOrders([]);
-      previousCountRef.current = 0;
-    } catch (err: any) {
-      console.error('Clear failed:', err.message);
+      const payload = await response.json() as OrderMutationResponse;
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message ?? 'Unable to clear completed orders');
+      }
+
+      setOrders((currentOrders) => currentOrders.filter((order) => order.status !== 'completed'));
+      previousOrderIdsRef.current = new Set(
+        orders.filter((order) => order.status !== 'completed').map((order) => order.id),
+      );
+      setError(null);
+    } catch (clearError) {
+      setError(getErrorMessage(clearError));
     }
-  }, []);
+  }, [authFetch, orders]);
 
   return { orders, loading, error, isConnected, updateOrderStatus, clearOrders };
 }

@@ -1,23 +1,59 @@
-import React, { createContext, useContext, useReducer, useMemo } from 'react';
+import React, { useMemo, useReducer, useEffect } from 'react';
+import { CartContext } from './cart-context';
 import type { Cart, CartItem, MenuItem } from '../types';
 
-// ============================================
-// Cart Store — Agent 9
-// Replaces vanilla cart={} + OrbStore proxy
-// ============================================
+// Versioned storage key — bump version to invalidate stale persisted carts
+const CART_STORAGE_KEY = 'auraspice_cart_v1';
+
+// ─── Persist helpers ──────────────────────────────────────────────────────────
+
+function loadCartFromStorage(): Cart {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    // Basic schema guard — each value must have id, qty, price
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+    const validated: Cart = {};
+    for (const [key, val] of Object.entries(parsed)) {
+      if (
+        val &&
+        typeof val === 'object' &&
+        typeof (val as CartItem).id === 'number' &&
+        typeof (val as CartItem).qty === 'number' &&
+        typeof (val as CartItem).price === 'number' &&
+        typeof (val as CartItem).name === 'string'
+      ) {
+        validated[Number(key)] = val as CartItem;
+      }
+    }
+    return validated;
+  } catch {
+    return {};
+  }
+}
+
+function saveCartToStorage(cart: Cart): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (Object.keys(cart).length === 0) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } else {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    }
+  } catch {
+    // Storage quota exceeded or private browsing — fail silently
+  }
+}
+
+// ─── Reducer ──────────────────────────────────────────────────────────────────
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: MenuItem }
   | { type: 'REMOVE_ITEM'; payload: number }
   | { type: 'INCREASE_QTY'; payload: number }
   | { type: 'CLEAR_CART' };
-
-interface CartContextValue {
-  cart: Cart;
-  dispatch: React.Dispatch<CartAction>;
-  totalQty: number;
-  totalPrice: number;
-}
 
 function cartReducer(state: Cart, action: CartAction): Cart {
   switch (action.type) {
@@ -54,16 +90,21 @@ function cartReducer(state: Cart, action: CartAction): Cart {
   }
 }
 
-const CartContext = createContext<CartContextValue | null>(null);
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, dispatch] = useReducer(cartReducer, {} as Cart);
+  const [cart, dispatch] = useReducer(cartReducer, undefined, loadCartFromStorage);
+
+  // Persist to localStorage on every state change
+  useEffect(() => {
+    saveCartToStorage(cart);
+  }, [cart]);
 
   const computed = useMemo(() => {
     const items = Object.values(cart) as CartItem[];
     return {
-      totalQty: items.reduce((sum, i) => sum + i.qty, 0),
-      totalPrice: items.reduce((sum, i) => sum + i.price * i.qty, 0),
+      totalQty: items.reduce((sum, item) => sum + item.qty, 0),
+      totalPrice: items.reduce((sum, item) => sum + item.price * item.qty, 0),
     };
   }, [cart]);
 
@@ -72,10 +113,4 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       {children}
     </CartContext.Provider>
   );
-}
-
-export function useCart(): CartContextValue {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart must be used within CartProvider');
-  return ctx;
 }

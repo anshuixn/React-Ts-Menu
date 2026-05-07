@@ -1,10 +1,7 @@
 import { useRef, useEffect } from 'react';
 import type { GalleryCardData } from '../../types';
 
-// ============================================
-// GallerySection — Agent 11
-// Ports initGalleryScroll() from main.js
-// ============================================
+
 const galleryItems: GalleryCardData[] = [
   { image: '/assets/menu/chinese/dimsum.png',              title: 'Handcrafted Dim Sum',  desc: 'Steamed to perfection',         alt: 'Handcrafted Dim Sum' },
   { image: '/assets/menu/north-indian/chicken-biryani.png', title: 'Dum Biryani',          desc: 'Slow-cooked, aromatic layers',  alt: 'Chicken Biryani' },

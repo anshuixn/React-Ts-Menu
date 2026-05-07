@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { StaffAccount } from '../../types';
-import { useAuth } from '../../store/AuthContext';
+import { useAuth } from '../../store/useAuth';
 
-// ============================================================
-// PHASE 5 — All requests use authFetch (X-Staff-Token header).
-// PHASE 3 — Server enforces requireAdmin; this component is an
-//            extra UI guard but NOT the security boundary.
-// ============================================================
+/**
+ * Admin-only employee management modal. All requests use authenticated
+ * fetch. Server enforces requireAdmin; this component is a UI guard only.
+ */
 
-const MIN_KEY_LEN = 6;
+const MIN_KEY_LEN = 12;
 
 export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { authFetch } = useAuth();
@@ -20,12 +19,18 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
 
   const fetchData = useCallback(async () => {
     if (!isOpen) return;
+
     try {
       const [empRes, keyRes] = await Promise.all([
         authFetch('/api/staff'),
         authFetch('/api/key'),
       ]);
-      if (empRes.ok)  setEmployees(await empRes.json());
+
+      if (empRes.ok) {
+        const payload = await empRes.json() as { accounts?: StaffAccount[] };
+        setEmployees(payload.accounts ?? []);
+      }
+
       if (keyRes.ok) {
         const { key } = await keyRes.json();
         setEstKey(key);
@@ -35,7 +40,25 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
     }
   }, [isOpen, authFetch]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      if (!cancelled) {
+        await fetchData();
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchData, isOpen]);
 
   const handleRemove = async (id: string, name: string) => {
     if (!window.confirm(`Remove "${name}" (${id}) from the employee list?\n\nThey will no longer be able to sign in.`)) return;
@@ -44,8 +67,8 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
       if (res.ok) {
         await fetchData();
       } else {
-        const data = await res.json().catch(() => ({}));
-        alert(data.error ?? 'Failed to remove employee.');
+        const data = await res.json().catch(() => ({ message: 'Failed to remove employee.' })) as { message?: string };
+        alert(data.message ?? 'Failed to remove employee.');
       }
     } catch {
       alert('Network error. Please try again.');
@@ -76,8 +99,8 @@ export function EmployeeManagerModal({ isOpen, onClose }: { isOpen: boolean; onC
         setKeySuccess(true);
         setTimeout(() => setKeySuccess(false), 3000);
       } else {
-        const data = await res.json().catch(() => ({}));
-        setKeyError(data.error ?? 'Failed to update key.');
+        const data = await res.json().catch(() => ({ message: 'Failed to update key.' })) as { message?: string };
+        setKeyError(data.message ?? 'Failed to update key.');
       }
     } catch {
       setKeyError('Network error. Please try again.');

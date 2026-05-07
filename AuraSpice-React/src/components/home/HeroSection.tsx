@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useParticles } from '../../hooks/useParallax';
 
-// ============================================
-// HeroSection — Agent 11
-// ============================================
+
 export function HeroSection() {
   const particlesRef = useParticles();
 

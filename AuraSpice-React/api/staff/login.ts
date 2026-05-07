@@ -1,73 +1,133 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
+import { consumeRateLimit, peekRateLimit, resetRateLimit } from '../_lib/rateLimit';
+import { createStaffToken } from '../_lib/verifyToken';
+import { ensureMethod, getClientIp, setAuthCookie, setRetryAfterHeader } from '../_lib/http';
 import { supabaseAdmin } from '../_lib/supabaseAdmin';
+import { loginRequestSchema } from '../_lib/validation';
+
+const PUBLIC_RATE_LIMIT = {
+  limit: 60,
+  windowMs: 60_000,
+};
+
+const FAILED_LOGIN_RATE_LIMIT = {
+  limit: 5,
+  windowMs: 15 * 60_000,
+};
+
+interface StaffLoginRow {
+  id: string;
+  name: string;
+  role: string;
+  password_hash: string;
+}
+
+interface StaffSessionInsertRow {
+  token: string;
+  staff_id: string;
+  expires_at: string;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+  if (!ensureMethod(req, res, ['POST'])) {
+    return;
   }
 
-  const { id, password } = req.body;
+  res.setHeader('Cache-Control', 'no-store');
 
-  if (!id || !password) {
-    return res.status(400).json({ success: false, message: 'Missing credentials' });
+  const clientIp = getClientIp(req);
+  const publicRateLimit = await consumeRateLimit({
+    key: `public:staff-login:${clientIp}`,
+    ...PUBLIC_RATE_LIMIT,
+  });
+
+  if (!publicRateLimit.allowed) {
+    setRetryAfterHeader(res, publicRateLimit.retryAfterSeconds);
+    return res.status(429).json({ success: false, message: 'Too many requests' });
   }
+
+  const failedAttemptLimit = await peekRateLimit({
+    key: `failed-login:${clientIp}`,
+    ...FAILED_LOGIN_RATE_LIMIT,
+  });
+
+  if (!failedAttemptLimit.allowed) {
+    setRetryAfterHeader(res, failedAttemptLimit.retryAfterSeconds);
+    return res.status(429).json({ success: false, message: 'Too many failed login attempts' });
+  }
+
+  const parsedBody = loginRequestSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      success: false,
+      message: parsedBody.error.issues[0]?.message ?? 'Invalid request payload',
+    });
+  }
+
+  const { id, password } = parsedBody.data;
 
   try {
-    // 1. Fetch user from Supabase using Service Role (bypasses RLS)
-    const { data: user, error } = await supabaseAdmin
+    const { data: account, error } = await supabaseAdmin
       .from('staff_accounts')
       .select('id, name, role, password_hash')
       .eq('id', id)
-      .single();
+      .single<StaffLoginRow>();
 
-    if (error || !user) {
-      // Return generic error to prevent user enumeration
+    if (error || !account) {
+      await consumeRateLimit({
+        key: `failed-login:${clientIp}`,
+        ...FAILED_LOGIN_RATE_LIMIT,
+      });
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // 2. Verify password with bcrypt
-    const isValid = await bcrypt.compare(password, user.password_hash);
-    
-    if (!isValid) {
+    const isPasswordValid = await bcrypt.compare(password, account.password_hash);
+
+    if (!isPasswordValid) {
+      const failedAttempt = await consumeRateLimit({
+        key: `failed-login:${clientIp}`,
+        ...FAILED_LOGIN_RATE_LIMIT,
+      });
+      setRetryAfterHeader(res, failedAttempt.retryAfterSeconds);
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // 3. Generate a secure random token
-    const token = crypto.randomBytes(32).toString('hex');
-    
-    // Set expiry to 12 hours from now
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 12);
+    await resetRateLimit(`failed-login:${clientIp}`);
 
-    // 4. Store token in staff_sessions
+    const token = createStaffToken({
+      id: account.id,
+      name: account.name,
+      role: account.role,
+    });
+
+    const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+
     const { error: sessionError } = await supabaseAdmin
       .from('staff_sessions')
-      .insert({
+      .insert<StaffSessionInsertRow>({
         token,
-        staff_id: user.id,
-        expires_at: expiresAt.toISOString()
+        staff_id: account.id,
+        expires_at: expiresAt,
       });
 
     if (sessionError) {
-      console.error('Session error:', sessionError);
-      return res.status(500).json({ success: false, message: 'Internal Server Error' });
+      return res.status(500).json({ success: false, message: 'Unable to create session' });
     }
 
-    // 5. Return success with token and account info (omit password_hash)
+    setAuthCookie(res, token);
+
     return res.status(200).json({
       success: true,
       token,
       account: {
-        id: user.id,
-        name: user.name,
-        role: user.role
-      }
+        id: account.id,
+        name: account.name,
+        role: account.role,
+      },
     });
-    
-  } catch (err: any) {
-    console.error('Login error:', err);
+  } catch {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }

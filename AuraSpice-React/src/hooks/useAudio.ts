@@ -1,9 +1,6 @@
 import { useRef, useCallback } from 'react';
 
-// ============================================
-// useAudio — Agent 8
-// Ports AudioEngine from order.js
-// ============================================
+/** Web Audio API hook for UI sound effects. */
 export function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
 
@@ -34,7 +31,7 @@ export function useAudio() {
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
-    } catch (_) { /* silent fail */ }
+    } catch { /* silent fail */ }
   }, [init]);
 
   const playChime = useCallback(() => {
@@ -55,7 +52,7 @@ export function useAudio() {
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.8);
-    } catch (_) { /* silent fail */ }
+    } catch { /* silent fail */ }
   }, [init]);
 
   const vibrateClick = useCallback(() => {

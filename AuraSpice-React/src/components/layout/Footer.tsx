@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// ============================================
-// Footer — Agent 13 (presentational)
-// ============================================
+
 export function Footer() {
   return (
     <footer className="footer">

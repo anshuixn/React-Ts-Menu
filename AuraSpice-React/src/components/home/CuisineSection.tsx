@@ -2,9 +2,7 @@ import { Link } from 'react-router-dom';
 import { DishPill } from './DishPill';
 import type { CuisineSectionProps } from '../../types';
 
-// ============================================
-// CuisineSection — Agent 12
-// ============================================
+
 export function CuisineSection({ chapter, title, desc, image, alt, reversed, dishes, orderLink }: CuisineSectionProps) {
   return (
     <section className="cuisine-section">

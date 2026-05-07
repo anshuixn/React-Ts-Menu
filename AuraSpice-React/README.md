@@ -1,97 +1,147 @@
-# AuraSpice Realtime Web Experience
+# AuraSpice React
 
-AuraSpice is a premium, real-time, multi-device web application designed for seamless restaurant management. It features a stunning customer-facing menu and tracking interface, alongside a secure, serverless-ready staff portal for live order management.
+AuraSpice is a Vite + React restaurant ordering app with a protected staff dashboard, serverless API routes, and Supabase-backed order/session storage.
 
-## 👶 How to Run the Website (Baby Steps)
+This repo is now structured for production deployment:
 
-Follow these simple, step-by-step instructions to get the website running on your own computer. You don't need to be an expert!
+- Public clients can create orders only.
+- Staff reads and all privileged mutations go through `/api/*`.
+- No default admin account or establishment key is seeded by the schema.
+- Staff auth uses signed JWT sessions plus secure `HttpOnly` cookies.
+- Lint, typecheck, build, tests, and coverage are all wired into the repo.
 
-### Step 1: Open your Terminal
-- On a Mac: Press `Cmd + Space`, type "Terminal", and hit Enter.
-- On Windows: Press the Windows key, type "Command Prompt" or "PowerShell", and hit Enter.
+## Tech Stack
 
-### Step 2: Make sure you have Node.js installed
-Type this command in your terminal and press Enter:
-```bash
-node -v
-```
-If you see a version number (like `v18.x.x` or higher), you are good to go! If you get an error, please download and install Node.js from [nodejs.org](https://nodejs.org/).
+- Frontend: React 19, TypeScript, Vite
+- Backend: Vercel Serverless Functions
+- Database: Supabase Postgres
+- Auth: bcrypt + JWT + server-side session table
+- Testing: Vitest + Testing Library
 
-### Step 3: Go to the project folder
-In your terminal, navigate to the folder where you saved this project. For example:
-```bash
-cd path/to/your/folder/AuraSpice-React
-```
+## Quick Start
 
-### Step 4: Install the required packages
-We need to download the building blocks the project needs to run. Type this command and press Enter:
+1. Install dependencies:
+
 ```bash
 npm install
 ```
-*(Wait a few moments for the download bar to finish. It's downloading all the necessary code libraries.)*
 
-### Step 5: Start the website!
-Now, start the local server by typing this command and hitting Enter:
+2. Create your local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Fill in these required values:
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+JWT_SECRET=
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+4. Apply the schema in Supabase:
+
+- Run [supabase/schema.sql](/Users/anshu_sir/Codeing/AntiGravty/Experiments/AuraSpice-React/supabase/schema.sql)
+- If you are upgrading an existing database, run [supabase/migrations/20260503_production_hardening.sql](/Users/anshu_sir/Codeing/AntiGravty/Experiments/AuraSpice-React/supabase/migrations/20260503_production_hardening.sql)
+
+5. Bootstrap the first admin account and establishment key:
+
+```bash
+BOOTSTRAP_ADMIN_ID=owner \
+BOOTSTRAP_ADMIN_NAME="Restaurant Owner" \
+BOOTSTRAP_ADMIN_PASSWORD="replace-with-a-strong-password" \
+BOOTSTRAP_ESTABLISHMENT_KEY="replace-with-a-long-random-key" \
+node scripts/init-admin.mjs
+```
+
+6. Start the backend and frontend in separate terminals:
+
+```bash
+npm start
+```
+
 ```bash
 npm run dev
 ```
 
-### Step 6: Open it in your browser
-Once the command finishes, it will show you a local web address. It usually looks like this:
-`http://localhost:5173/`
+- Frontend: `http://localhost:5173`
+- Vercel API dev server: `http://localhost:5174`
 
-Hold down `Cmd` (Mac) or `Ctrl` (Windows) and click that link, or simply copy and paste it into your Chrome/Safari browser. 
+## Development Commands
 
-**Congratulations! The AuraSpice website is now running on your computer! 🎉**
+```bash
+npm run dev
+npm start
+npm run lint
+npm run typecheck
+npm run build
+npm test
+npm run test:coverage
+```
 
----
+Optional smoke check for auth throttling:
 
-## Tech Stack
+```bash
+bash scripts/rate-limit-smoke.sh
+```
 
-- **Frontend:** React, TypeScript, Vite
-- **Styling:** CSS (Antigravity Design System — Charcoal & Gold, Glassmorphism)
-- **Animations:** Framer Motion, Canvas Confetti
-- **Backend/Database:** Supabase (PostgreSQL), Supabase Realtime
-- **Serverless API:** Vercel Serverless Functions (`/api/*`)
-- **Authentication:** `bcrypt` password hashing, Cryptographically secure session tokens
+## Environment Variables
 
-## Database & Backend Setup (For Advanced Features)
+Client-exposed variables:
 
-To enable the live realtime order tracking and the secure staff portal, you must connect the app to a Supabase database.
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-### 1. Set up Environment Variables
-1. Create a new file in the root folder of this project and name it `.env.local`
-2. Add the following lines to it, replacing the placeholder text with your actual Supabase keys:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-   ```
-*(Note: The `SUPABASE_SERVICE_ROLE_KEY` is kept secure and is only used by the Vercel backend functions).*
+Server-only variables:
 
-### 2. Set up the Database Schema
-1. Log in to your [Supabase](https://supabase.com/) project dashboard.
-2. Click on the **SQL Editor** tab on the left menu.
-3. Open the `supabase/schema.sql` file located in this project folder.
-4. Copy all the text inside it, paste it into the Supabase SQL Editor, and click "Run".
-*(This automatically creates all the tables, security rules, and the default admin account needed to run the app).*
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `JWT_SECRET`
+- `ALLOWED_ORIGINS`
+
+Never expose `SUPABASE_SERVICE_ROLE_KEY` or `JWT_SECRET` to the browser.
+
+## Security Model
+
+- Public order creation still uses the Supabase anon key.
+- Public order status reads are served through `/api/orders/status`.
+- Staff order lists, establishment key access, and order status changes are served through authenticated `/api/*` routes.
+- Staff registration always creates `Staff` accounts only. It cannot mint `Admin` users from request payloads.
+- The first admin account must be created explicitly with `scripts/init-admin.mjs`.
 
 ## Deployment
 
-This application is designed to be deployed seamlessly on **Vercel**. 
-The `vercel.json` file is pre-configured to handle single-page application routing and set secure HTTP headers.
+Deploy on Vercel with the same environment variables from `.env.example`.
 
-1. Connect your GitHub repository to Vercel.
-2. Ensure the **Framework Preset** is set to `Vite`.
-3. Add the following Environment Variables in your Vercel project settings:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-4. Click Deploy!
+Required production variables:
 
-## Usage Guide
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `JWT_SECRET`
+- `ALLOWED_ORIGINS`
 
-- **Customer View:** Navigate to the homepage to explore the menu, add items to the cart, and place an order. Once an order is placed, a premium `StatusDrawer` will appear, offering real-time tracking of the order's journey from the kitchen to your table.
-- **Staff Portal:** Navigate to `/staff` (or click "Staff Portal" in the mobile menu). 
-  - **Default Admin Login:** ID: `admin`, Password: `admin` *(Change this immediately in production!)*.
-  - The Staff Dashboard features a drag-and-drop Kanban board that instantly syncs across all devices. When a staff member moves an order to a new status, the customer's phone will automatically update via Supabase Realtime.
+`ALLOWED_ORIGINS` should contain your exact production frontend origin, for example:
+
+```env
+ALLOWED_ORIGINS=https://app.example.com
+```
+
+## Verification
+
+Before deploying, run:
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm run test:coverage
+npm audit --omit=dev
+```
+
+The current test suite focuses on auth/session handling, rate limiting, validation, cart state, and protected-route gating.

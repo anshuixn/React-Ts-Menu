@@ -37,13 +37,13 @@ export function useParallax() {
 // Uses pure CSS-drawn circles — no images, no emojis.
 // ============================================================
 
-// Spice-colored dot palette (charcoal-gold theme)
+// Realistic fire-like palette (oranges, yellows, reds)
 const PARTICLE_COLORS = [
-  'rgba(212,175,55,0.55)',  // gold
-  'rgba(212,175,55,0.3)',   // gold dim
-  'rgba(230,126,34,0.4)',   // saffron
-  'rgba(255,255,255,0.12)', // white glint
-  'rgba(212,175,55,0.18)',  // ghost gold
+  'rgba(255, 69, 0, 0.7)',   // Red-orange
+  'rgba(255, 140, 0, 0.6)',  // Dark orange
+  'rgba(255, 165, 0, 0.7)',  // Orange
+  'rgba(255, 215, 0, 0.5)',  // Gold/Yellow
+  'rgba(255, 99, 71, 0.6)',  // Tomato red
 ];
 
 export function useParticles() {
@@ -54,16 +54,19 @@ export function useParticles() {
     if (!container) return;
 
     const isMobile = window.innerWidth <= 768;
-    const count = isMobile ? 10 : 24;
+    const count = isMobile ? 40 : 96; // 4x the previous count
 
     const spans: HTMLSpanElement[] = [];
     for (let i = 0; i < count; i++) {
       const span = document.createElement('span');
       span.className = 'particle';
 
-      // Randomised dot sizing (4–14px) and positioning
-      const size = Math.random() * 10 + 4;
+      // Randomised sizing (3–16px) for varying fireball sizes
+      const size = Math.random() * 13 + 3;
       const color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+      
+      // Calculate random horizontal drift for swaying
+      const drift = (Math.random() - 0.5) * 100; // Drift between -50px and +50px
 
       span.style.cssText = `
         left: ${Math.random() * 100}%;
@@ -71,8 +74,9 @@ export function useParticles() {
         height: ${size}px;
         border-radius: 50%;
         background: ${color};
-        box-shadow: 0 0 ${size * 2}px ${color};
-        animation-duration: ${Math.random() * 18 + 12}s;
+        box-shadow: 0 0 ${size * 2}px ${size / 2}px ${color}, inset 0 0 ${size / 2}px rgba(255,255,255,0.4);
+        --drift: ${drift}px;
+        animation-duration: ${Math.random() * 8 + 6}s; /* Faster for fire */
         animation-delay: ${Math.random() * 12}s;
         opacity: 0;
       `;
