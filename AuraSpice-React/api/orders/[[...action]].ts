@@ -203,12 +203,27 @@ async function handleOrderUpdate(req: VercelRequest, res: VercelResponse) {
 
 // --- Main Router ---
 
+const KNOWN_ACTIONS = new Set(['create', 'update', 'status', 'clear']);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
-  
-  // Vercel populates req.query.action as a string or array for catch-all routes
+
+  // Prefer Vercel's injected query param, but fall back to parsing req.url directly.
+  // With the Vite framework preset, the [[...action]] catch-all path param may not
+  // be injected into req.query in production, causing action to be undefined even
+  // for requests like /api/orders/create — which would fall through to handleGetOrders
+  // and return 405 for POST requests.
   const actionPath = req.query.action;
-  const action = Array.isArray(actionPath) ? actionPath[0] : actionPath;
+  let action: string | undefined = Array.isArray(actionPath) ? actionPath[0] : actionPath;
+
+  if (!action) {
+    // Parse the last path segment from the URL (e.g. /api/orders/create → 'create')
+    const urlPath = (req.url ?? '').split('?')[0];
+    const lastSegment = urlPath.split('/').filter(Boolean).pop();
+    if (lastSegment && KNOWN_ACTIONS.has(lastSegment)) {
+      action = lastSegment;
+    }
+  }
 
   switch (action) {
     case 'create':
