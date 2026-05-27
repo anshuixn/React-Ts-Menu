@@ -29,6 +29,8 @@ export function getAllowedOrigins(): string[] {
     'http://127.0.0.1:5173',
     'http://localhost:5174',
     'http://127.0.0.1:5174',
+    // Also allow any localhost port for flexible local dev
+    'http://localhost:4173',  // vite preview
   ];
 
   const vercelOrigin = readEnv('VERCEL_URL');
@@ -49,5 +51,8 @@ export function getServerEnv() {
 }
 
 export function isProductionEnvironment(): boolean {
+  // VERCEL_ENV is 'development' when running via `vercel dev` locally,
+  // even though NODE_ENV may be 'production'. Always trust VERCEL_ENV first.
+  if (process.env.VERCEL_ENV === 'development') return false;
   return process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 }
