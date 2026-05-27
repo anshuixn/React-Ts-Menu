@@ -33,10 +33,15 @@ export function getAllowedOrigins(): string[] {
     'http://localhost:4173',  // vite preview
   ];
 
-  const vercelOrigin = readEnv('VERCEL_URL');
-
-  if (vercelOrigin) {
-    defaultOrigins.push(`https://${vercelOrigin}`);
+  // Vercel injects several URL env vars — we need all of them:
+  // - VERCEL_URL              → unique per-deployment URL (e.g. auraspice-react-abc123.vercel.app)
+  // - VERCEL_PROJECT_PRODUCTION_URL → stable production alias (e.g. auraspice-react.vercel.app)
+  // - VERCEL_BRANCH_URL       → branch/preview alias
+  // The browser sends the alias the user visited as the Origin, which is usually
+  // VERCEL_PROJECT_PRODUCTION_URL — NOT the unique VERCEL_URL.
+  for (const key of ['VERCEL_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'VERCEL_BRANCH_URL']) {
+    const v = readEnv(key);
+    if (v) defaultOrigins.push(`https://${v}`);
   }
 
   return [...new Set([...configuredOrigins, ...defaultOrigins])];
