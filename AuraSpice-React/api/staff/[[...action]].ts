@@ -199,14 +199,35 @@ async function handleDeleteById(req: VercelRequest, res: VercelResponse, targetI
 
 // --- Main Router ---
 
+const KNOWN_STAFF_ACTIONS = new Set(['login', 'logout', 'register', 'me', 'by-id']);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
-  
-  const actionPath = req.query.action;
-  const action = Array.isArray(actionPath) ? actionPath[0] : actionPath;
 
-  if (action === 'by-id' && Array.isArray(actionPath) && actionPath[1]) {
-    return handleDeleteById(req, res, actionPath[1]);
+  // Prefer Vercel's injected query param, fall back to parsing req.url directly.
+  // With the Vite framework preset, [[...action]] catch-all path params may not
+  // be injected into req.query in production.
+  const actionPath = req.query.action;
+  let action: string | undefined = Array.isArray(actionPath) ? actionPath[0] : actionPath;
+  let byIdTarget: string | undefined = Array.isArray(actionPath) ? actionPath[1] : undefined;
+
+  if (!action) {
+    // Parse from URL: e.g. /api/staff/login or /api/staff/by-id/alice
+    const urlPath = (req.url ?? '').split('?')[0];
+    const segments = urlPath.split('/').filter(Boolean);
+    // segments: ['api', 'staff', 'login'] or ['api', 'staff', 'by-id', 'alice']
+    const staffIndex = segments.lastIndexOf('staff');
+    if (staffIndex !== -1 && segments[staffIndex + 1]) {
+      const candidate = segments[staffIndex + 1];
+      if (KNOWN_STAFF_ACTIONS.has(candidate)) {
+        action = candidate;
+        byIdTarget = segments[staffIndex + 2]; // staff ID after 'by-id'
+      }
+    }
+  }
+
+  if (action === 'by-id' && byIdTarget) {
+    return handleDeleteById(req, res, byIdTarget);
   }
 
   switch (action) {
