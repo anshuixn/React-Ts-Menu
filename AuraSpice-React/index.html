@@ -3,14 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aura & Spice | Authentic Indian Cuisine</title>
+
+    <!-- AGENT 11 — Full mobile viewport with safe area support for notched phones -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- AGENT 12 — Theme & status bar color for Android Chrome -->
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <title>Aura &amp; Spice | Authentic Indian Cuisine</title>
     <meta
       name="description"
-      content="Aura & Spice is a premium dine-in ordering experience with live order tracking, a secure kitchen dashboard, and real-time operations powered by Supabase."
+      content="Aura &amp; Spice is a premium dine-in ordering experience with live order tracking, a secure kitchen dashboard, and real-time operations powered by Supabase."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Aura & Spice | Authentic Indian Cuisine" />
+    <meta property="og:title" content="Aura &amp; Spice | Authentic Indian Cuisine" />
     <meta
       property="og:description"
       content="Modern dine-in ordering, secure staff workflows, and live kitchen visibility built for restaurant operations."
@@ -18,15 +27,83 @@
     <meta property="og:image" content="/og-image.jpg" />
     <meta property="og:url" content="%VITE_PUBLIC_URL%" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Aura & Spice | Authentic Indian Cuisine" />
+    <meta name="twitter:title" content="Aura &amp; Spice | Authentic Indian Cuisine" />
     <meta
       name="twitter:description"
       content="Modern dine-in ordering, secure staff workflows, and live kitchen visibility built for restaurant operations."
     />
     <meta name="twitter:image" content="/og-image.jpg" />
+
+    <!-- AGENT 13 — Preconnect to Google Fonts before CSS loads to eliminate blocking -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- AGENT 14 — Inline critical CSS: ensures background & loading spinner appear
+         BEFORE any JS or external CSS loads. Prevents black screen on slow/old Android. -->
+    <style>
+      :root { --bg: #0a0a0a; --gold: #d4af37; }
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; background: var(--bg); }
+
+      /* Loading spinner — visible until React mounts and hides #app-loader */
+      #app-loader {
+        position: fixed; inset: 0; z-index: 9999;
+        background: var(--bg);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 20px;
+      }
+      #app-loader .loader-ring {
+        width: 48px; height: 48px; border-radius: 50%;
+        border: 3px solid rgba(212,175,55,0.15);
+        border-top-color: var(--gold);
+        animation: spin 0.9s linear infinite;
+      }
+      #app-loader .loader-text {
+        font-family: -apple-system, system-ui, sans-serif;
+        font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
+        color: rgba(212,175,55,0.6);
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* Fade-out when React is ready */
+      #app-loader.fade-out {
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.35s ease;
+      }
+    </style>
   </head>
   <body>
+    <!-- AGENT 14 — Inline loader: shown instantly before JS/CSS parse, no black flash -->
+    <div id="app-loader" aria-hidden="true" aria-label="Loading Aura &amp; Spice">
+      <div class="loader-ring"></div>
+      <span class="loader-text">Aura &amp; Spice</span>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- AGENT 15 — Hide the loader once React has rendered -->
+    <script>
+      // Use MutationObserver to detect when React populates #root
+      (function () {
+        var root = document.getElementById('root');
+        var loader = document.getElementById('app-loader');
+        if (!root || !loader) return;
+        var obs = new MutationObserver(function () {
+          if (root.firstChild) {
+            loader.classList.add('fade-out');
+            setTimeout(function () { loader.style.display = 'none'; }, 400);
+            obs.disconnect();
+          }
+        });
+        obs.observe(root, { childList: true });
+        // Safety fallback: hide loader after 8s regardless
+        setTimeout(function () {
+          loader.classList.add('fade-out');
+          setTimeout(function () { loader.style.display = 'none'; }, 400);
+          obs.disconnect();
+        }, 8000);
+      })();
+    </script>
   </body>
 </html>

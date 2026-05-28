@@ -1,4 +1,6 @@
+/* AGENT 13 — font-display:swap prevents render-blocking on Android/slow networks */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Bebas+Neue&display=swap');
+
 
 /* ============================================
    AURA & SPICE — ANTIGRAVITY DESIGN SYSTEM
@@ -3120,3 +3122,77 @@ header.scrolled {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ============================================================
+   AGENT 11-15 — ANDROID / MOBILE COMPATIBILITY FIXES
+   Resolves black screen on older Android WebViews & Chrome
+   ============================================================ */
+
+/* Ensure body fills screen — prevents black gaps on some Android */
+html, body, #root {
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+}
+
+/* Safe-area insets for notched phones (iPhone X+, newer Android) */
+.order-page-header,
+header {
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
+}
+
+/* Fix bottom safe area for floating orb buttons */
+.orb-button {
+  bottom: max(30px, calc(30px + env(safe-area-inset-bottom, 0px)));
+}
+
+/* Reduce heavy animations on battery-save/reduced-motion mode */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── backdrop-filter Android polyfill ───────────────────────
+   Older Android WebView (< 76) doesn't support backdrop-filter.
+   -webkit-backdrop-filter is required on all glassmorphism elements. */
+
+.glass-card,
+.modal-card,
+.login-card,
+.kanban-column,
+.order-card,
+.filter-tab.active {
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+          backdrop-filter:  blur(20px) saturate(180%);
+}
+
+.col-header,
+.login-card header,
+.modal-header {
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter:  blur(12px);
+}
+
+/* Fallback background for devices where backdrop-filter is fully broken */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-card,
+  .modal-card,
+  .login-card,
+  .kanban-column {
+    background: rgba(14, 14, 14, 0.96) !important;
+  }
+}
+
+/* ── will-change budget ─────────────────────────────────────
+   Excessive will-change on mobile causes GPU OOM → black screen.
+   Restrict to elements that actually animate. */
+@media (max-width: 768px) {
+  .gallery-card,
+  .order-card,
+  .filter-tab {
+    will-change: auto;
+  }
+}
+
