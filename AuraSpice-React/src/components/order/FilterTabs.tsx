@@ -1,5 +1,5 @@
+import { useEffect, useRef } from 'react';
 import type { Category } from '../../types';
-
 
 interface TabDef {
   label: string;
@@ -22,8 +22,23 @@ interface FilterTabsProps {
 }
 
 export function FilterTabs({ active, onChange }: FilterTabsProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // AGENT 15 — Scroll selected tab into view center
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const activeTab = containerRef.current.querySelector('.filter-tab.active');
+    if (activeTab) {
+      activeTab.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [active]);
+
   return (
-    <div className="filter-tabs" id="filter-tabs">
+    <div className="filter-tabs" id="filter-tabs" ref={containerRef}>
       {TABS.map((tab) => (
         <button
           key={tab.value}
@@ -43,3 +58,4 @@ export function FilterTabs({ active, onChange }: FilterTabsProps) {
     </div>
   );
 }
+

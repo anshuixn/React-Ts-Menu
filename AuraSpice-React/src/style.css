@@ -621,6 +621,9 @@ header.scrolled {
   gap: 30px;
   padding: 0 5%;
   will-change: transform;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
 
 .gallery-card {
@@ -632,6 +635,8 @@ header.scrolled {
   cursor: pointer;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  /* AGENT 15 — Snapping Alignment */
+  scroll-snap-align: center;
 }
 
 .gallery-card:hover {
@@ -1542,6 +1547,9 @@ header.scrolled {
   padding-bottom: 6px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* AGENT 15 — Smooth Scroll Snapping */
+  scroll-snap-type: x proximity;
+  scroll-padding: 0 20px;
 }
 .filter-tabs::-webkit-scrollbar { display: none; }
 
@@ -1564,6 +1572,8 @@ header.scrolled {
   flex-shrink: 0;
   min-width: 72px;
   letter-spacing: 0.3px;
+  /* AGENT 15 — Snapping Alignment */
+  scroll-snap-align: center;
 }
 
 .filter-tab-icon {
