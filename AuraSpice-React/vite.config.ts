@@ -99,6 +99,8 @@ export default defineConfig(({ mode }) => {
     },
   },
   build: {
+    target: 'es2020',
+    cssTarget: 'chrome61',
     chunkSizeWarningLimit: 350,
     rollupOptions: {
       output: {

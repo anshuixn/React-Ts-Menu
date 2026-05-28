@@ -9,6 +9,7 @@ import { OrbButton, SuccessOverlay } from '../components/order/OrbButton';
 import { TableSelector } from '../components/order/TableSelector';
 import { useAudio } from '../hooks/useAudio';
 import { useOrderPolling } from '../hooks/useOrderPolling';
+import { safeSessionStorage } from '../lib/storage';
 import type { Category } from '../types';
 
 const StatusDrawer = lazy(async () => {
@@ -30,10 +31,10 @@ function OrderPageInner() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(
-    () => sessionStorage.getItem('currentOrderId')
+    () => safeSessionStorage.getItem('currentOrderId')
   );
   const [currentTrackingToken, setCurrentTrackingToken] = useState<string | null>(
-    () => sessionStorage.getItem('currentTrackingToken')
+    () => safeSessionStorage.getItem('currentTrackingToken')
   );
 
   const { cart, dispatch, totalQty } = useCart();
@@ -110,13 +111,13 @@ function OrderPageInner() {
 
       dispatch({ type: 'CLEAR_CART' });
       // Clear any previous order tracking state before setting the new one
-      sessionStorage.removeItem('currentOrderId');
-      sessionStorage.removeItem('currentTrackingToken');
+      safeSessionStorage.removeItem('currentOrderId');
+      safeSessionStorage.removeItem('currentTrackingToken');
       setCartOpen(false);
       setCurrentOrderId(orderId);
       setCurrentTrackingToken(trackingToken);
-      sessionStorage.setItem('currentOrderId', orderId);
-      sessionStorage.setItem('currentTrackingToken', trackingToken);
+      safeSessionStorage.setItem('currentOrderId', orderId);
+      safeSessionStorage.setItem('currentTrackingToken', trackingToken);
 
       setShowOverlay(true);
       setTimeout(() => setShowOverlay(false), 2500);

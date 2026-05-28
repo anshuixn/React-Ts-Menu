@@ -1,5 +1,6 @@
 import React, { useMemo, useReducer, useEffect } from 'react';
 import { CartContext } from './cart-context';
+import { safeLocalStorage } from '../lib/storage';
 import type { Cart, CartItem, MenuItem } from '../types';
 
 // Versioned storage key — bump version to invalidate stale persisted carts
@@ -10,7 +11,7 @@ const CART_STORAGE_KEY = 'auraspice_cart_v1';
 function loadCartFromStorage(): Cart {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(CART_STORAGE_KEY);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     // Basic schema guard — each value must have id, qty, price
@@ -38,9 +39,9 @@ function saveCartToStorage(cart: Cart): void {
   if (typeof window === 'undefined') return;
   try {
     if (Object.keys(cart).length === 0) {
-      localStorage.removeItem(CART_STORAGE_KEY);
+      safeLocalStorage.removeItem(CART_STORAGE_KEY);
     } else {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      safeLocalStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     }
   } catch {
     // Storage quota exceeded or private browsing — fail silently
