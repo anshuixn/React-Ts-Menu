@@ -24,7 +24,7 @@
  * all anon/user access while still allowing our serverless functions.
  */
 
-import { supabaseAdmin } from "./supabaseAdmin.js";
+import { getSupabaseAdmin } from "./supabaseAdmin.js";
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -48,6 +48,22 @@ interface RateLimitRow {
   reset_at: string;
 }
 
+// ─── In-memory fallback map ──────────────────────────────────────────────────
+// Used when Supabase admin client is not configured (e.g. testing or demo environment)
+const fallbackMap = new Map<string, { count: number; resetAt: Date }>();
+
+// Periodic cleanup to avoid memory leak
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = new Date();
+    for (const [key, value] of fallbackMap.entries()) {
+      if (value.resetAt <= now) {
+        fallbackMap.delete(key);
+      }
+    }
+  }, 60_000);
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function calcRetryAfter(resetAt: string): number {
@@ -61,9 +77,24 @@ function calcRetryAfter(resetAt: string): number {
  * Use this to check if a key is already blocked before doing expensive work.
  */
 export async function peekRateLimit(options: RateLimitOptions): Promise<RateLimitResult> {
+  const admin = getSupabaseAdmin();
   const now = new Date();
 
-  const { data, error } = await supabaseAdmin
+  if (!admin) {
+    const entry = fallbackMap.get(options.key);
+    if (!entry || entry.resetAt <= now) {
+      return { allowed: true, remaining: options.limit, retryAfterSeconds: 0 };
+    }
+    const remaining = Math.max(0, options.limit - entry.count);
+    const retryAfterSeconds = Math.max(0, (entry.resetAt.getTime() - now.getTime()) / 1000);
+    return {
+      allowed: entry.count < options.limit,
+      remaining,
+      retryAfterSeconds,
+    };
+  }
+
+  const { data, error } = await admin
     .from('rate_limits')
     .select('count, reset_at')
     .eq('key', options.key)
@@ -92,21 +123,32 @@ export async function peekRateLimit(options: RateLimitOptions): Promise<RateLimi
 /**
  * consumeRateLimit — atomically increments the counter and returns
  * whether the request is allowed.
- *
- * Uses an upsert: if the row doesn't exist (or the window has expired)
- * it creates a fresh bucket starting at 1.  If it exists within the
- * window it increments.  The increment check is done in one round-trip
- * via a Postgres RPC to avoid TOCTOU races.
  */
 export async function consumeRateLimit(options: RateLimitOptions): Promise<RateLimitResult> {
+  const admin = getSupabaseAdmin();
   const now = new Date();
-  const resetAt = new Date(now.getTime() + options.windowMs).toISOString();
+  const resetAtDate = new Date(now.getTime() + options.windowMs);
+  const resetAt = resetAtDate.toISOString();
+
+  if (!admin) {
+    let entry = fallbackMap.get(options.key);
+    if (!entry || entry.resetAt <= now) {
+      entry = { count: 0, resetAt: resetAtDate };
+    }
+    entry.count++;
+    fallbackMap.set(options.key, entry);
+
+    const remaining = Math.max(0, options.limit - entry.count);
+    const retryAfterSeconds = Math.max(0, (entry.resetAt.getTime() - now.getTime()) / 1000);
+    return {
+      allowed: entry.count <= options.limit,
+      remaining,
+      retryAfterSeconds,
+    };
+  }
 
   // Try to atomically increment via RPC.
-  // NOTE: Supabase returns an *array* for RETURNS TABLE functions — data[0] is the row.
-  // Treating data as a plain object causes data.count === undefined, which makes
-  // `undefined <= limit` evaluate to false, blocking every request. Fixed below.
-  const { data: rpcData, error } = await supabaseAdmin.rpc('increment_rate_limit', {
+  const { data: rpcData, error } = await admin.rpc('increment_rate_limit', {
     p_key: options.key,
     p_limit: options.limit,
     p_window_ms: options.windowMs,
@@ -132,16 +174,19 @@ export async function consumeRateLimit(options: RateLimitOptions): Promise<RateL
 
 /**
  * Fallback upsert path — used when the RPC function isn't available.
- * Less atomic than the RPC but still far better than the old in-memory Map.
  */
 async function fallbackUpsert(
   options: RateLimitOptions,
   resetAt: string,
 ): Promise<RateLimitResult> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return { allowed: true, remaining: options.limit, retryAfterSeconds: 0 };
+  }
   const now = new Date();
 
   // Read current state first
-  const { data: existing } = await supabaseAdmin
+  const { data: existing } = await admin
     .from('rate_limits')
     .select('count, reset_at')
     .eq('key', options.key)
@@ -151,7 +196,7 @@ async function fallbackUpsert(
   const newCount = windowExpired ? 1 : existing.count + 1;
   const newResetAt = windowExpired ? resetAt : existing.reset_at;
 
-  await supabaseAdmin
+  await admin
     .from('rate_limits')
     .upsert({ key: options.key, count: newCount, reset_at: newResetAt });
 
@@ -170,5 +215,10 @@ async function fallbackUpsert(
  * Called after a successful login to clear failed-attempt counters.
  */
 export async function resetRateLimit(key: string): Promise<void> {
-  await supabaseAdmin.from('rate_limits').delete().eq('key', key);
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    fallbackMap.delete(key);
+    return;
+  }
+  await admin.from('rate_limits').delete().eq('key', key);
 }
