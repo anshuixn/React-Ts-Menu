@@ -103,24 +103,28 @@ export async function consumeRateLimit(options: RateLimitOptions): Promise<RateL
   const resetAt = new Date(now.getTime() + options.windowMs).toISOString();
 
   // Try to atomically increment via RPC.
-  // Falls back to the safe upsert path if the RPC isn't set up yet.
-  const { data, error } = await supabaseAdmin.rpc('increment_rate_limit', {
+  // NOTE: Supabase returns an *array* for RETURNS TABLE functions — data[0] is the row.
+  // Treating data as a plain object causes data.count === undefined, which makes
+  // `undefined <= limit` evaluate to false, blocking every request. Fixed below.
+  const { data: rpcData, error } = await supabaseAdmin.rpc('increment_rate_limit', {
     p_key: options.key,
     p_limit: options.limit,
     p_window_ms: options.windowMs,
     p_reset_at: resetAt,
-  }) as { data: { count: number; reset_at: string } | null; error: unknown };
+  }) as { data: Array<{ count: number; reset_at: string }> | null; error: unknown };
 
-  if (error || !data) {
+  const row = Array.isArray(rpcData) ? rpcData[0] : null;
+
+  if (error || !row) {
     // Fallback: plain upsert (slightly less atomic but still distributed)
     return await fallbackUpsert(options, resetAt);
   }
 
-  const remaining = Math.max(0, options.limit - data.count);
-  const retryAfterSeconds = calcRetryAfter(data.reset_at);
+  const remaining = Math.max(0, options.limit - row.count);
+  const retryAfterSeconds = calcRetryAfter(row.reset_at);
 
   return {
-    allowed: data.count <= options.limit,
+    allowed: row.count <= options.limit,
     remaining,
     retryAfterSeconds,
   };
