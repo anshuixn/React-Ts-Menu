@@ -203,7 +203,7 @@ async function handleOrderUpdate(req: VercelRequest, res: VercelResponse) {
 
 // --- Main Router ---
 
-const KNOWN_ACTIONS = new Set(['create', 'update', 'status', 'clear']);
+const KNOWN_ACTIONS = new Set(['create', 'update', 'status', 'clear', 'list']);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
@@ -226,6 +226,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   switch (action) {
+    case 'list':
+      return handleGetOrders(req, res);
     case 'create':
       return handleCreateOrder(req, res);
     case 'update':

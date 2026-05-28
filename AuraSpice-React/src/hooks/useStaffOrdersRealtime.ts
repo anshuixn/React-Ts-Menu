@@ -41,7 +41,7 @@ export function useStaffOrdersRealtime() {
     }
 
     try {
-      const response = await authFetch('/api/orders');
+      const response = await authFetch('/api/orders/list');
       const payload = await response.json() as OrdersResponse;
 
       if (!response.ok || !payload.success) {
