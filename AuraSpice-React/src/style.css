@@ -1696,6 +1696,107 @@ header.scrolled {
 .badge-bounce { animation: badgeBounce 0.5s ease; }
 
 /* ============================================
+   ORDER PAGE — Orb Button Positions
+   ============================================ */
+.status-orb-btn {
+  position: fixed;
+  bottom: 110px;
+  left: 30px;
+  z-index: var(--layer-orbs);
+}
+
+.cart-orb-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: var(--layer-orbs);
+}
+
+/* Safe-area support (notch / Dynamic Island / home indicator) */
+@supports (bottom: env(safe-area-inset-bottom)) {
+  .cart-orb-btn {
+    bottom: max(30px, calc(env(safe-area-inset-bottom) + 18px));
+  }
+  .status-orb-btn {
+    bottom: max(110px, calc(env(safe-area-inset-bottom) + 98px));
+  }
+}
+
+/* Mobile — tighten orb positions and resize to 52 px */
+@media (max-width: 768px) {
+  .status-orb-btn {
+    bottom: 96px;
+    left: 16px;
+  }
+  .cart-orb-btn {
+    bottom: 24px;
+    right: 16px;
+  }
+
+  /* Safe-area mobile overrides */
+  @supports (bottom: env(safe-area-inset-bottom)) {
+    .cart-orb-btn {
+      bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+    }
+    .status-orb-btn {
+      bottom: max(96px, calc(env(safe-area-inset-bottom) + 84px));
+    }
+  }
+
+  /* Slightly smaller orbs on phones */
+  .status-orb-btn.orb-btn,
+  .cart-orb-btn.orb-btn {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION — Respect system preference
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  /* Hero entry animations */
+  .hero-tagline,
+  .hero-title,
+  .hero-subtitle,
+  .hero-cta,
+  .hero-scroll-indicator {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Particles */
+  .particle { animation: none; opacity: 0; }
+
+  /* Scroll-driven reveal */
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .stagger-children > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  /* Orb glows / badge bounce */
+  .status-glow.active,
+  .cart-glow.active { animation: none; }
+  .badge-bounce { animation: none; }
+
+  /* Cart pulse */
+  .cart-bubble { animation: none; }
+
+  /* Scroll line */
+  .scroll-line { animation: none; opacity: 0.5; }
+}
+
+/* ============================================
    ORDER PAGE — Drawers
    ============================================ */
 .cart-drawer,
@@ -1904,6 +2005,11 @@ header.scrolled {
   .filter-tab-icon {
     width: 38px;
     height: 38px;
+  }
+
+  /* Extra bottom padding so the last menu card isn't hidden behind orbs */
+  .menu-grid {
+    padding-bottom: 140px;
   }
 }
 

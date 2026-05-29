@@ -16,6 +16,7 @@ const FOCUSABLE_SELECTORS = [
 export function useFocusTrap(
   containerRef: React.RefObject<HTMLElement | null>,
   isActive: boolean,
+  onClose?: () => void,
 ) {
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
@@ -37,6 +38,13 @@ export function useFocusTrap(
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (onClose) {
+          e.preventDefault();
+          onClose();
+        }
+        return;
+      }
       if (e.key !== 'Tab') return;
 
       const focusables = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
@@ -68,5 +76,5 @@ export function useFocusTrap(
         previouslyFocusedRef.current.focus();
       }
     };
-  }, [containerRef, isActive]);
+  }, [containerRef, isActive, onClose]);
 }

@@ -8,15 +8,16 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onCheckout: () => void;
+  checkoutError?: string | null;
 }
 
-export function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerProps) {
+export function CartDrawer({ isOpen, onClose, onCheckout, checkoutError }: CartDrawerProps) {
   const { cart, totalPrice } = useCart();
   const items = Object.values(cart);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useTouchPhysics(drawerRef, 'right', isOpen, onClose);
-  useFocusTrap(drawerRef, isOpen);
+  useFocusTrap(drawerRef, isOpen, onClose);
 
   return (
     <div
@@ -48,6 +49,24 @@ export function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerProps) {
           <span>Total</span>
           <span id="cart-total" aria-live="polite">₹{totalPrice.toFixed(2)}</span>
         </div>
+        {checkoutError && (
+          <div
+            className="checkout-error"
+            role="alert"
+            style={{
+              color: '#ff4d4d',
+              background: 'rgba(255, 77, 77, 0.08)',
+              border: '1px solid rgba(255, 77, 77, 0.2)',
+              borderRadius: 10,
+              padding: '10px 14px',
+              fontSize: '0.82rem',
+              marginTop: 12,
+              textAlign: 'center',
+            }}
+          >
+            {checkoutError}
+          </div>
+        )}
         <button
           id="checkout-btn"
           className="btn-primary"

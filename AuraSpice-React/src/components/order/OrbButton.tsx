@@ -8,17 +8,18 @@ interface OrbButtonProps {
   ariaLabel: string;
   ariaExpanded: boolean;
   onClick: () => void;
+  className?: string;
   style?: React.CSSProperties;
 }
 
-export function OrbButton({ id, icon, badge, glowClass, badgeId, ariaLabel, ariaExpanded, onClick, style }: OrbButtonProps) {
+export function OrbButton({ id, icon, badge, glowClass, badgeId, ariaLabel, ariaExpanded, onClick, className, style }: OrbButtonProps) {
   // Detect if it's an image path or a plain emoji/string
   const isImage = icon.startsWith('/') || icon.startsWith('http');
 
   return (
     <button
       id={id}
-      className="orb-btn"
+      className={`orb-btn ${className ?? ''}`}
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       onClick={onClick}

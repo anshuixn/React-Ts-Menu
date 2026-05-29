@@ -1,3 +1,6 @@
+import { useRef } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
+
 // ============================================
 // TableSelector — Table number picker modal
 // ============================================
@@ -11,6 +14,10 @@ interface TableSelectorProps {
 }
 
 export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  
+  useFocusTrap(modalRef, isOpen, current ? () => onSelect(current) : undefined);
+
   if (!isOpen) return null;
 
   const tables = Array.from({ length: TOTAL_TABLES }, (_, i) =>
@@ -34,6 +41,10 @@ export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps)
       }}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="table-selector-title"
         style={{
           background: 'rgba(14, 14, 14, 0.98)',
           border: '1px solid rgba(212, 175, 55, 0.3)',
@@ -50,14 +61,17 @@ export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps)
           <div style={{ marginBottom: 8 }}>
             <img src="/icons/table.png" alt="Table" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%' }} draggable={false} />
           </div>
-          <h2 style={{
-            margin: 0,
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: '1.6rem',
-            fontWeight: 700,
-            color: 'var(--text-light)',
-            letterSpacing: 0.5,
-          }}>
+          <h2
+            id="table-selector-title"
+            style={{
+              margin: 0,
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: '1.6rem',
+              fontWeight: 700,
+              color: 'var(--text-light)',
+              letterSpacing: 0.5,
+            }}
+          >
             Select Your Table
           </h2>
           <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 6, margin: '6px 0 0' }}>

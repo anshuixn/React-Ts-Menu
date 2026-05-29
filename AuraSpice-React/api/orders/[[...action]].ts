@@ -165,11 +165,26 @@ async function handleOrderStatus(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ success: false, message: 'Too many requests' });
   }
 
-  const parsedQuery = orderStatusQuerySchema.safeParse({ id: req.query.id, table: req.query.table });
-  if (!parsedQuery.success) return res.status(400).json({ success: false, message: parsedQuery.error.issues[0]?.message ?? 'Invalid request parameters' });
+  const parsedQuery = orderStatusQuerySchema.safeParse({
+    id: req.query.id,
+    table: req.query.table,
+    token: req.query.token,
+  });
+  if (!parsedQuery.success) {
+    return res.status(400).json({
+      success: false,
+      message: parsedQuery.error.issues[0]?.message ?? 'Invalid request parameters',
+    });
+  }
 
   try {
-    const { data: order, error } = await admin.from('orders').select('id, table_number, status').eq('id', parsedQuery.data.id).eq('table_number', parsedQuery.data.table).single<OrderRow>();
+    const { data: order, error } = await admin
+      .from('orders')
+      .select('id, table_number, status')
+      .eq('id', parsedQuery.data.id)
+      .eq('table_number', parsedQuery.data.table)
+      .eq('tracking_token', parsedQuery.data.token)
+      .single<OrderRow>();
     if (error || !order) return res.status(404).json({ success: false, message: 'Order not found' });
     return res.status(200).json({ success: true, status: order.status });
   } catch {

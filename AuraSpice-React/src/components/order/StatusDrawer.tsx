@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import type { OrderStatus, TrackerState } from '../../types';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 /**
  * Premium animated order status drawer with parallax hero,
@@ -252,6 +253,9 @@ export function StatusDrawer({ isOpen, onClose, status, trackerData }: StatusDra
   const currentIndex = status ? STEP_ORDER.indexOf(status) : -1;
   const currentMeta  = status ? STEP_META[status] : null;
   const contentRef   = useRef<HTMLDivElement>(null);
+  const drawerRef    = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(drawerRef, isOpen, onClose);
 
   return (
     <AnimatePresence>
@@ -268,6 +272,11 @@ export function StatusDrawer({ isOpen, onClose, status, trackerData }: StatusDra
 
           {/* Drawer panel */}
           <motion.div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="status-drawer-title"
+            aria-hidden={!isOpen}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -289,8 +298,8 @@ export function StatusDrawer({ isOpen, onClose, status, trackerData }: StatusDra
               background: 'rgba(10,10,10,0.6)', backdropFilter: 'blur(12px)',
             }}>
               <div>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: 0.3, margin: 0 }}>
-                  Live Order Journey
+                <h2 id="status-drawer-title" style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: 0.3, margin: 0 }}>
+                  Order Status
                 </h2>
                 {status && currentMeta && (
                   <motion.p
@@ -305,6 +314,7 @@ export function StatusDrawer({ isOpen, onClose, status, trackerData }: StatusDra
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close order status drawer"
                 style={{
                   background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
                   color: 'var(--text-light)', width: 36, height: 36,

@@ -27,3 +27,5 @@ coverage
 *.sln
 *.sw?
 .vercel
+test-results/
+playwright-report/

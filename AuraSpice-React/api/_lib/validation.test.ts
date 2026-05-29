@@ -47,17 +47,19 @@ describe('validation schemas', () => {
     ).toBe(true);
   });
 
-  it('requires both order id and table for public status lookups', () => {
+  it('requires order id, table, and tracking token for public status lookups', () => {
     expect(
       orderStatusQuerySchema.safeParse({
         id: 'ORD-123',
         table: '12',
+        token: 'tracking-token-123',
       }).success,
     ).toBe(true);
 
     expect(
       orderStatusQuerySchema.safeParse({
         id: 'ORD-123',
+        table: '12',
       }).success,
     ).toBe(false);
   });

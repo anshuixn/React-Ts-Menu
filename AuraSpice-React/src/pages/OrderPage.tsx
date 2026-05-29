@@ -30,6 +30,7 @@ function OrderPageInner() {
   const [cartOpen, setCartOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(
     () => safeSessionStorage.getItem('currentOrderId')
   );
@@ -65,6 +66,7 @@ function OrderPageInner() {
 
   const openCart = useCallback(() => {
     playSwoosh();
+    setCheckoutError(null);
     setCartOpen(true);
     setStatusOpen(false);
   }, [playSwoosh]);
@@ -82,6 +84,7 @@ function OrderPageInner() {
       setShowTableSelector(true);
       return;
     }
+    setCheckoutError(null);
 
     try {
       const response = await fetch('/api/orders/create', {
@@ -123,7 +126,7 @@ function OrderPageInner() {
       setTimeout(() => setShowOverlay(false), 2500);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to place order';
-      alert(message);
+      setCheckoutError(message);
     }
   }, [cart, dispatch, tableNumber]);
 
@@ -175,7 +178,7 @@ function OrderPageInner() {
       </section>
 
       {/* Menu Grid */}
-      <section style={{ padding: '0 5% 120px', maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: '0 5%', maxWidth: 1200, margin: '0 auto' }}>
         <MenuGrid filter={activeFilter} />
       </section>
 
@@ -189,7 +192,7 @@ function OrderPageInner() {
         badge={status ? 1 : 0}
         badgeId="status-badge"
         glowClass="status-glow"
-        style={{ position: 'fixed', bottom: 110, left: 30, zIndex: 900 }}
+        className="status-orb-btn"
       />
       <OrbButton
         id="cart-orb"
@@ -200,7 +203,7 @@ function OrderPageInner() {
         ariaLabel="Open cart"
         ariaExpanded={cartOpen}
         onClick={openCart}
-        style={{ position: 'fixed', bottom: 30, right: 30, zIndex: 900 }}
+        className="cart-orb-btn"
       />
 
       {/* Backdrop */}
@@ -214,7 +217,7 @@ function OrderPageInner() {
       )}
 
       {/* Drawers */}
-      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} onCheckout={submitOrder} />
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} onCheckout={submitOrder} checkoutError={checkoutError} />
       <Suspense fallback={null}>
         <StatusDrawer isOpen={statusOpen} onClose={() => setStatusOpen(false)} status={status} trackerData={trackerData} />
       </Suspense>

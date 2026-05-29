@@ -60,15 +60,19 @@ export const staffIdParamSchema = z.object({
 
 export const orderStatusQuerySchema = z.object({
   id: z
-    .string()
+    .string({ message: 'Order ID is required' })
     .trim()
     .min(1, 'Order ID is required')
     .max(64, 'Order ID must be 64 characters or fewer'),
   table: z
-    .string()
+    .string({ message: 'Table number is required' })
     .trim()
     .min(1, 'Table number is required')
     .max(16, 'Table number must be 16 characters or fewer'),
+  token: z
+    .string({ message: 'Tracking token is required' })
+    .trim()
+    .min(1, 'Tracking token is required'),
 });
 
 export const emptyBodySchema = z.object({}).strict();
