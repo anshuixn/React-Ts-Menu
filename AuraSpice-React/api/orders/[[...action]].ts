@@ -7,6 +7,7 @@ import { getSupabaseAdmin, supabaseAdmin } from "../_lib/supabaseAdmin.js";
 import { sanitizeString } from "../_lib/sanitize.js";
 import { orderStatusQuerySchema, updateOrderSchema } from "../_lib/validation.js";
 import { requireStaffSession } from "../_lib/verifyToken.js";
+import { getMenuItem } from "../_lib/menuPrices.js";
 
 // --- Types & Schemas ---
 
@@ -34,11 +35,7 @@ interface OrderRow {
   created_at?: string;
 }
 
-interface MenuPriceRow {
-  id: number;
-  name: string;
-  price: number;
-}
+// MenuPriceRow moved to api/_lib/menuPrices.ts
 
 const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   new: ['new', 'cooking'],
@@ -110,21 +107,20 @@ async function handleCreateOrder(req: VercelRequest, res: VercelResponse) {
 
   const { table_number: rawTableNumber, items } = parsedBody.data;
   const table_number = sanitizeString(rawTableNumber);
-  const itemIds = items.map((i) => i.id);
 
   try {
-    const { data: menuRows, error: menuError } = await admin.from('menu_items').select('id, name, price').in('id', itemIds);
-    if (menuError) return res.status(500).json({ success: false, message: 'Unable to verify menu prices' });
-
-    const priceMap = new Map<number, MenuPriceRow>();
-    for (const row of (menuRows ?? []) as MenuPriceRow[]) priceMap.set(row.id, row);
-
+    // Validate and resolve prices from the server-side price map.
+    // This is the authoritative source — no DB query needed for menu lookup,
+    // which eliminates the "Menu item with ID X not found" error caused by
+    // the menu_items table being empty or having mismatched IDs.
     for (const item of items) {
-      if (!priceMap.has(item.id)) return res.status(400).json({ success: false, message: `Menu item with ID ${item.id} not found` });
+      if (!getMenuItem(item.id)) {
+        return res.status(400).json({ success: false, message: `Menu item with ID ${item.id} is not on the menu` });
+      }
     }
 
     const orderItems = items.map((item) => {
-      const menuItem = priceMap.get(item.id)!;
+      const menuItem = getMenuItem(item.id)!;
       return { id: item.id, name: menuItem.name, qty: item.qty, price: menuItem.price };
     });
 
