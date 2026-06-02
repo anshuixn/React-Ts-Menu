@@ -63,7 +63,13 @@ INSERT INTO public.menu_items (id, name, category, price, calories, image, "desc
   (27, 'Mango Shake',           'beverages',     129, 280, '/assets/menu/beverages/mango-shake.png',     'Thick and luscious Alphonso mango shake made with real fruit pulp'),
   (28, 'Masala Chai',           'beverages',      49,  80, '/assets/menu/beverages/masala-chai.png',     'Spiced Indian tea with ginger, cardamom, and cloves — brewed fresh'),
   (29, 'Fresh Lime Soda',       'beverages',      89,  60, '/assets/menu/beverages/fresh-lime-soda.png', 'Tangy lime juice with soda, cumin salt, and a touch of mint')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  name         = EXCLUDED.name,
+  category     = EXCLUDED.category,
+  price        = EXCLUDED.price,
+  calories     = EXCLUDED.calories,
+  image        = EXCLUDED.image,
+  "desc"       = EXCLUDED."desc";
 
 -- Reset sequence to avoid ID conflicts on future inserts
 SELECT setval('menu_items_id_seq', (SELECT MAX(id) FROM public.menu_items));
