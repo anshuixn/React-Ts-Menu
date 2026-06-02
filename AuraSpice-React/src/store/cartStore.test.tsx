@@ -147,7 +147,7 @@ describe('CartProvider', () => {
           <button type="button" onClick={() => dispatch({ type: 'INCREASE_QTY', payload: 999 })}>
             IncreaseNonExistent
           </button>
-          <button type="button" onClick={() => dispatch({ type: 'UNSUPPORTED' as any })}>
+          <button type="button" onClick={() => dispatch({ type: 'UNSUPPORTED' as never })}>
             UnsupportedAction
           </button>
         </div>

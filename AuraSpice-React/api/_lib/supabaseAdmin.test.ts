@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const createClientMock = vi.fn();
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: (...args: any[]) => createClientMock(...args),
+  createClient: (...args: unknown[]) => createClientMock(...args),
 }));
 
 describe('supabaseAdmin', () => {
