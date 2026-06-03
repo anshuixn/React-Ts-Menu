@@ -11,12 +11,13 @@ interface TableSelectorProps {
   isOpen: boolean;
   current: string;
   onSelect: (table: string) => void;
+  onClose: () => void;
 }
 
-export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps) {
+export function TableSelector({ isOpen, current, onSelect, onClose }: TableSelectorProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   
-  useFocusTrap(modalRef, isOpen, current ? () => onSelect(current) : undefined);
+  useFocusTrap(modalRef, isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -46,6 +47,7 @@ export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps)
         aria-modal="true"
         aria-labelledby="table-selector-title"
         style={{
+          position: 'relative',
           background: 'rgba(14, 14, 14, 0.98)',
           border: '1px solid rgba(212, 175, 55, 0.3)',
           borderRadius: 24,
@@ -56,6 +58,42 @@ export function TableSelector({ isOpen, current, onSelect }: TableSelectorProps)
           animation: 'tsCardIn 0.35s cubic-bezier(0.16,1,0.3,1) both',
         }}
       >
+        {/* Cut / Close Option */}
+        <button
+          onClick={onClose}
+          aria-label="Close table selector"
+          style={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            color: 'var(--text-light)',
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            transition: 'all 0.2s ease',
+            zIndex: 10,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 71, 87, 0.1)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 71, 87, 0.3)';
+            (e.currentTarget as HTMLButtonElement).style.color = '#ff4757';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.05)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255, 0.08)';
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-light)';
+          }}
+        >
+          ✕
+        </button>
+
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{ marginBottom: 8 }}>

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState, useCallback, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CartProvider } from '../store/cartStore';
 import { useCart } from '../store/useCart';
 import { FilterTabs } from '../components/order/FilterTabs';
@@ -19,6 +19,7 @@ const StatusDrawer = lazy(async () => {
 
 function OrderPageInner() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialTable = searchParams.get('table');
 
   const [tableNumber, setTableNumber] = useState<string>(initialTable ?? '');
@@ -63,6 +64,18 @@ function OrderPageInner() {
     setShowTableSelector(false);
     setSearchParams((prev) => { prev.set('table', table); return prev; }, { replace: true });
   }, [setSearchParams]);
+
+  const handleCloseTableSelector = useCallback(() => {
+    if (!tableNumber) {
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/', { replace: true });
+      }
+    } else {
+      setShowTableSelector(false);
+    }
+  }, [tableNumber, navigate]);
 
   const openCart = useCallback(() => {
     playSwoosh();
@@ -230,6 +243,7 @@ function OrderPageInner() {
         isOpen={showTableSelector}
         current={tableNumber}
         onSelect={handleSelectTable}
+        onClose={handleCloseTableSelector}
       />
     </main>
   );
