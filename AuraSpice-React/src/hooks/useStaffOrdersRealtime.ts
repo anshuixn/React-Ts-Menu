@@ -88,9 +88,48 @@ export function useStaffOrdersRealtime() {
       orderId: '*',
       events: ['INSERT', 'UPDATE', 'DELETE'],
       callback: ({ event, newRecord, orderId }) => {
-        if (event === 'INSERT' || event === 'DELETE') {
-          // Re-fetch full list to get server-normalized data
-          void fetchOrders(false);
+        if (event === 'INSERT') {
+          // Bug 5 fix: Optimistically inject the new order from the realtime payload
+          // instead of triggering a full HTTP refetch. This eliminates network round-trip
+          // lag on every new order event — critical on busy services.
+          const incomingId = newRecord['id'] as string | undefined;
+          if (!incomingId) {
+            // Malformed payload — fall back to HTTP fetch
+            void fetchOrders(false);
+            return;
+          }
+
+          const newOrder = {
+            id: newRecord['id'] as string,
+            table: newRecord['table_number'] as string,
+            items: (newRecord['items'] ?? []) as Order['items'],
+            total: newRecord['total'] as number,
+            status: (newRecord['status'] ?? 'new') as OrderStatus,
+            timestamp: newRecord['created_at'] as string,
+          };
+
+          setOrders((current) => {
+            // Guard against duplicates if the event fires twice
+            if (current.some((o) => o.id === newOrder.id)) return current;
+            const updated = [newOrder, ...current];
+            const previousIds = previousOrderIdsRef.current;
+            if (previousIds.size > 0 && !previousIds.has(newOrder.id)) {
+              playChime();
+            }
+            previousOrderIdsRef.current = new Set(updated.map((o) => o.id));
+            return updated;
+          });
+        } else if (event === 'DELETE') {
+          // For DELETE, we only know the old record ID — remove it locally
+          const deletedId = (newRecord['id'] ?? orderId) as string | undefined;
+          if (deletedId) {
+            setOrders((current) => current.filter((o) => o.id !== deletedId));
+            previousOrderIdsRef.current = new Set(
+              [...previousOrderIdsRef.current].filter((id) => id !== deletedId),
+            );
+          } else {
+            void fetchOrders(false);
+          }
         } else if (event === 'UPDATE' && orderId) {
           const updatedStatus = newRecord['status'] as OrderStatus | undefined;
           if (updatedStatus) {
@@ -105,14 +144,17 @@ export function useStaffOrdersRealtime() {
     });
 
     return unsubscribe;
-  }, [fetchOrders, user]);
+  }, [fetchOrders, playChime, user]);
 
   const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
-    const previousOrders = orders;
+    // Bug 2 fix: Capture the snapshot INSIDE the functional update so it is always
+    // the latest state at the time of the update call, not a stale closure.
+    let snapshotForRollback: Order[] = [];
 
-    setOrders((currentOrders) =>
-      currentOrders.map((order) => (order.id === id ? { ...order, status } : order)),
-    );
+    setOrders((currentOrders) => {
+      snapshotForRollback = currentOrders;
+      return currentOrders.map((order) => (order.id === id ? { ...order, status } : order));
+    });
 
     try {
       const response = await authFetch('/api/orders/update', {
@@ -129,10 +171,11 @@ export function useStaffOrdersRealtime() {
 
       setError(null);
     } catch (updateError) {
-      setOrders(previousOrders);
+      // Rollback using the snapshot we captured synchronously before the async call
+      setOrders(snapshotForRollback);
       setError(getErrorMessage(updateError));
     }
-  }, [authFetch, orders]);
+  }, [authFetch]);
 
   const clearOrders = useCallback(async () => {
     try {
@@ -146,15 +189,19 @@ export function useStaffOrdersRealtime() {
         throw new Error(payload.message ?? 'Unable to clear completed orders');
       }
 
-      setOrders((currentOrders) => currentOrders.filter((order) => order.status !== 'completed'));
-      previousOrderIdsRef.current = new Set(
-        orders.filter((order) => order.status !== 'completed').map((order) => order.id),
-      );
+      // Bug 3 fix: Use functional state update to read the LATEST orders state
+      // rather than the stale closure captured at callback definition time.
+      setOrders((currentOrders) => {
+        const remaining = currentOrders.filter((order) => order.status !== 'completed');
+        // Also update the ref atomically with the new set
+        previousOrderIdsRef.current = new Set(remaining.map((order) => order.id));
+        return remaining;
+      });
       setError(null);
     } catch (clearError) {
       setError(getErrorMessage(clearError));
     }
-  }, [authFetch, orders]);
+  }, [authFetch]);
 
   return { orders, loading, error, isConnected, updateOrderStatus, clearOrders };
 }

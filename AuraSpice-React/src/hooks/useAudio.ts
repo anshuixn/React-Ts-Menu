@@ -1,11 +1,24 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 
 /** Web Audio API hook for UI sound effects. */
 export function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
 
+  // Bug 7 fix: Close the AudioContext when this hook unmounts.
+  // Browsers allow a maximum of ~6 AudioContext instances per tab.
+  // Without this, a long staff session that remounts this hook (e.g. route
+  // navigation) would silently leak AudioContext instances until audio stops working.
+  useEffect(() => {
+    return () => {
+      if (ctxRef.current && ctxRef.current.state !== 'closed') {
+        void ctxRef.current.close();
+        ctxRef.current = null;
+      }
+    };
+  }, []);
+
   const init = useCallback(() => {
-    if (!ctxRef.current) {
+    if (!ctxRef.current || ctxRef.current.state === 'closed') {
       ctxRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     }
     if (ctxRef.current.state === 'suspended') {

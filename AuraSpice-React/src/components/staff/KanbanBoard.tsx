@@ -9,6 +9,19 @@ const STATUSES: { id: OrderStatus; title: string; color: string }[] = [
   { id: 'completed', title: 'Completed', color: 'var(--text-dim)' },
 ];
 
+/**
+ * Bug 6 fix: Guard against malformed/null timestamps from the DB.
+ * If `order.timestamp` is undefined, null, or an invalid date string,
+ * `new Date(value).toLocaleTimeString()` throws a TypeError and crashes
+ * the entire KanbanBoard. This helper returns '—' instead.
+ */
+function safeFormatTime(timestamp: string | undefined | null): string {
+  if (!timestamp) return '—';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: {
   order: Order;
   dragProps: React.HTMLAttributes<HTMLDivElement>;
@@ -16,7 +29,8 @@ function OrderCard({ order, dragProps, onAction, disableDrag, isBeingDragged }: 
   disableDrag: boolean;
   isBeingDragged: boolean;
 }) {
-  const time = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const time = safeFormatTime(order.timestamp);
+
 
   return (
     <div

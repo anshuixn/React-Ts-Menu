@@ -1,11 +1,17 @@
 import { useState } from 'react';
 
-export function KanbanHeader({ onClearAll }: { onClearAll: () => void }) {
+export function KanbanHeader({ onClearAll }: { onClearAll: () => Promise<void> | void }) {
   const [clearPending, setClearPending] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   const handleConfirm = async () => {
-    await onClearAll();
-    setClearPending(false);
+    setIsClearing(true);
+    try {
+      await onClearAll();
+    } finally {
+      setClearPending(false);
+      setIsClearing(false);
+    }
   };
 
   const handleCancel = () => {
@@ -29,19 +35,23 @@ export function KanbanHeader({ onClearAll }: { onClearAll: () => void }) {
         </span>
         <button
           onClick={handleConfirm}
+          disabled={isClearing}
           className="btn-outline btn-sm"
           style={{
             borderColor: 'transparent',
             color: 'white',
             background: '#ff4757',
             transition: 'all 0.3s ease',
+            opacity: isClearing ? 0.6 : 1,
+            cursor: isClearing ? 'not-allowed' : 'pointer',
           }}
           aria-label="Confirm clearing all completed orders"
         >
-          Confirm
+          {isClearing ? 'Clearing…' : 'Confirm'}
         </button>
         <button
           onClick={handleCancel}
+          disabled={isClearing}
           className="btn-outline btn-sm"
           style={{
             borderColor: 'var(--glass-border)',
@@ -75,3 +85,5 @@ export function KanbanHeader({ onClearAll }: { onClearAll: () => void }) {
     </div>
   );
 }
+
+
