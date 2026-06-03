@@ -3,12 +3,12 @@ import type { GalleryCardData } from '../../types';
 
 
 const galleryItems: GalleryCardData[] = [
-  { image: '/assets/menu/chinese/dimsum.png',              title: 'Handcrafted Dim Sum',  desc: 'Steamed to perfection',         alt: 'Handcrafted Dim Sum' },
-  { image: '/assets/menu/north-indian/chicken-biryani.png', title: 'Dum Biryani',          desc: 'Slow-cooked, aromatic layers',  alt: 'Chicken Biryani' },
-  { image: '/assets/menu/south-indian/uttapam.png',         title: 'Golden Uttapam',        desc: 'Crispy, loaded with toppings',  alt: 'Uttapam' },
-  { image: '/assets/menu/fast-food/pizza.png',              title: 'Loaded Pizza',          desc: 'Hand-tossed, overloaded',       alt: 'Loaded Pizza' },
-  { image: '/assets/menu/beverages/cold-coffee.png',        title: 'Cold Coffee',           desc: 'Creamy, frothy, chilled',       alt: 'Cold Coffee' },
-  { image: '/assets/menu/chinese/spring-rolls.png',         title: 'Crispy Spring Rolls',   desc: 'Golden fried, crunchy',         alt: 'Spring Rolls' },
+  { image: '/assets/menu/chinese/dimsum.webp',              title: 'Handcrafted Dim Sum',  desc: 'Steamed to perfection',         alt: 'Handcrafted Dim Sum' },
+  { image: '/assets/menu/north-indian/chicken-biryani.webp', title: 'Dum Biryani',          desc: 'Slow-cooked, aromatic layers',  alt: 'Chicken Biryani' },
+  { image: '/assets/menu/south-indian/uttapam.webp',         title: 'Golden Uttapam',        desc: 'Crispy, loaded with toppings',  alt: 'Uttapam' },
+  { image: '/assets/menu/fast-food/pizza.webp',              title: 'Loaded Pizza',          desc: 'Hand-tossed, overloaded',       alt: 'Loaded Pizza' },
+  { image: '/assets/menu/beverages/cold-coffee.webp',        title: 'Cold Coffee',           desc: 'Creamy, frothy, chilled',       alt: 'Cold Coffee' },
+  { image: '/assets/menu/chinese/spring-rolls.webp',         title: 'Crispy Spring Rolls',   desc: 'Golden fried, crunchy',         alt: 'Spring Rolls' },
 ];
 
 export function GallerySection() {
