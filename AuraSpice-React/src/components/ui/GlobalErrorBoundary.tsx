@@ -42,7 +42,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             justifyContent: 'center',
             background: '#0a0a0a',
             color: '#e0e0e0',
-            fontFamily: "'Inter', system-ui, sans-serif",
+            fontFamily: "'Manrope', system-ui, sans-serif",
             textAlign: 'center',
             padding: '40px 20px',
           }}

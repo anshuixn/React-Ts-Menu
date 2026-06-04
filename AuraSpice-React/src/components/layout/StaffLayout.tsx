@@ -29,7 +29,7 @@ export function StaffLayout({ children }: { children: ReactNode }) {
       >
         <div className="logo">
           Aura<span>&</span>Spice{' '}
-          <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: 5 }}>
+          <span style={{ fontFamily: 'Manrope', fontWeight: 400, fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: 5 }}>
             Kitchen Portal
           </span>
         </div>
@@ -51,7 +51,7 @@ export function StaffLayout({ children }: { children: ReactNode }) {
               style={{
                 background: 'transparent', border: '1px solid rgba(212, 175, 55, 0.4)',
                 color: 'var(--accent-gold)', padding: '6px 14px', borderRadius: 8,
-                cursor: 'pointer', fontFamily: 'Inter', fontSize: '0.8rem',
+                cursor: 'pointer', fontFamily: 'Manrope', fontSize: '0.8rem',
                 transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: 6
               }}
             >
@@ -64,7 +64,7 @@ export function StaffLayout({ children }: { children: ReactNode }) {
             style={{
               background: 'transparent', border: '1px solid var(--glass-border)',
               color: 'var(--text-muted)', padding: '6px 14px', borderRadius: 8,
-              cursor: 'pointer', fontFamily: 'Inter', fontSize: '0.8rem', transition: 'all 0.3s ease'
+              cursor: 'pointer', fontFamily: 'Manrope', fontSize: '0.8rem', transition: 'all 0.3s ease'
             }}
           >
             Logout

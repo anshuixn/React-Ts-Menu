@@ -37,7 +37,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Sentry.ErrorBoundary
       fallback={
-        <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#0a0a0a', color: '#888', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#0a0a0a', color: '#888', fontFamily: 'Manrope, sans-serif' }}>
           <div style={{ textAlign: 'center', maxWidth: 400, padding: 32 }}>
             <p style={{ fontSize: '2rem', marginBottom: 16 }}>🍽️</p>
             <h1 style={{ color: '#d4af37', marginBottom: 8, fontSize: '1.25rem' }}>Something went wrong</h1>

@@ -40,7 +40,7 @@ export function OfflineBanner() {
         textAlign: 'center',
         padding: '10px 16px',
         fontSize: '0.875rem',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'Manrope, sans-serif',
         fontWeight: 500,
         letterSpacing: '0.01em',
         boxShadow: '0 2px 12px rgba(0,0,0,0.5)',

@@ -103,7 +103,7 @@ export function TableSelector({ isOpen, current, onSelect, onClose }: TableSelec
             id="table-selector-title"
             style={{
               margin: 0,
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Instrument Serif', serif",
               fontSize: '1.6rem',
               fontWeight: 700,
               color: 'var(--text-light)',
@@ -140,7 +140,7 @@ export function TableSelector({ isOpen, current, onSelect, onClose }: TableSelec
                     ? 'rgba(212, 175, 55, 0.18)'
                     : 'rgba(255,255,255,0.04)',
                   color: isActive ? 'var(--accent-gold)' : 'var(--text-muted)',
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                   fontWeight: isActive ? 700 : 500,
                   fontSize: '1rem',
                   cursor: 'pointer',

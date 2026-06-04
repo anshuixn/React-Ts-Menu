@@ -1,5 +1,5 @@
 /* AGENT 13 — font-display:swap prevents render-blocking on Android/slow networks */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
 
 
 /* ============================================
@@ -56,7 +56,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-light);
   line-height: 1.7;
@@ -65,8 +65,8 @@ body {
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 600;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
   line-height: 1.2;
 }
 
@@ -107,8 +107,8 @@ header.scrolled {
 
 .logo {
   font-size: 1.6rem;
-  font-weight: 700;
-  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-family: 'Instrument Serif', serif;
   color: var(--accent-gold);
   letter-spacing: 1px;
 }
@@ -345,7 +345,7 @@ header.scrolled {
 }
 
 .hero-tagline {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.8rem;
   letter-spacing: 6px;
   text-transform: uppercase;
@@ -436,7 +436,7 @@ header.scrolled {
 }
 
 .section-label {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.75rem;
   letter-spacing: 5px;
   text-transform: uppercase;
@@ -547,7 +547,7 @@ header.scrolled {
 }
 
 .cuisine-info .cuisine-tag {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.75rem;
   letter-spacing: 4px;
   text-transform: uppercase;
@@ -693,7 +693,7 @@ header.scrolled {
   font-size: 3.5rem;
   color: var(--accent-gold);
   margin-bottom: 8px;
-  font-family: 'Bebas Neue', cursive;
+  font-family: 'Space Grotesk', sans-serif;
   letter-spacing: 3px;
   line-height: 1;
 }
@@ -749,7 +749,7 @@ header.scrolled {
 }
 
 .footer-col h4 {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.8rem;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -1581,7 +1581,7 @@ header.scrolled {
   background: rgba(255,255,255,0.03);
   color: var(--text-muted);
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.78rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1857,7 +1857,7 @@ header.scrolled {
 .drawer-title {
   font-size: 1.2rem;
   color: var(--accent-gold);
-  font-family: 'Playfair Display', serif;
+  font-family: 'Instrument Serif', serif;
 }
 
 .close-drawer {
@@ -2097,7 +2097,7 @@ header.scrolled {
    ============================================ */
 .section-label {
   display: block;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.75rem;
   letter-spacing: 4px;
   text-transform: uppercase;
@@ -2106,7 +2106,7 @@ header.scrolled {
 }
 
 .section-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Instrument Serif', serif;
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   color: var(--text-light);
   margin-bottom: 16px;
@@ -2163,7 +2163,7 @@ header.scrolled {
 }
 
 .modal-header h2 {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 1.3rem;
   color: var(--text-light);
 }
@@ -2222,7 +2222,7 @@ header.scrolled {
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.75rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   transition: all 0.3s ease;
 }
 
@@ -2379,7 +2379,7 @@ header.scrolled {
   padding: 5px 12px;
   border-radius: 20px;
   border: 1px solid;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -2474,7 +2474,7 @@ header.scrolled {
   font-size: 0.65rem;
   letter-spacing: 0.5px;
   text-align: center;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 500;
   line-height: 1.2;
   max-width: 56px;
@@ -2613,7 +2613,7 @@ header.scrolled {
 }
 
 .col-title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 1rem;
   font-weight: 600;
   padding-left: 12px;
@@ -2748,7 +2748,7 @@ header.scrolled {
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -3126,7 +3126,7 @@ header.scrolled {
   cursor: pointer;
   transition: all 0.25s ease;
   white-space: nowrap;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .emp-remove-btn:hover {

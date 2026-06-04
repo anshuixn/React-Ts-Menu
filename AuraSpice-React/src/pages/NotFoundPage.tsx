@@ -11,7 +11,7 @@ export default function NotFoundPage() {
         justifyContent: 'center',
         background: 'var(--bg-dark)',
         color: 'var(--text-light)',
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: "'Manrope', system-ui, sans-serif",
         textAlign: 'center',
         padding: '40px 20px',
       }}
