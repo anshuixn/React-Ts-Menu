@@ -1,4 +1,6 @@
 
+import type React from 'react';
+
 interface OrbButtonProps {
   id: string;
   icon: string;       // now an image path e.g. "/icons/cart.png"
