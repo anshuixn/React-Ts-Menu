@@ -1,8 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { safeLocalStorage } from '../lib/storage';
-import { CartProvider } from './cartStore';
+import { CartProvider, cartStorageKey } from './cartStore';
 import { useCart } from './useCart';
+
+// All tests use a fixed table number.
+const TEST_TABLE = '01';
 
 const sampleItem = {
   id: 1,
@@ -38,17 +41,24 @@ function CartProbe() {
   );
 }
 
+// Helper to render CartProbe inside a CartProvider for a given table
+function renderWithProvider(tableNumber = TEST_TABLE) {
+  return render(
+    <CartProvider tableNumber={tableNumber}>
+      <CartProbe />
+    </CartProvider>,
+  );
+}
+
 describe('CartProvider', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    // Clear storage between tests to prevent state bleed-over
+    safeLocalStorage.clear();
   });
 
   it('adds, increases, removes, and clears cart items', () => {
-    render(
-      <CartProvider>
-        <CartProbe />
-      </CartProvider>,
-    );
+    renderWithProvider();
 
     fireEvent.click(screen.getByText('Add'));
     expect(screen.getByTestId('qty')).toHaveTextContent('1');
@@ -68,22 +78,14 @@ describe('CartProvider', () => {
 
   it('handles loadCartFromStorage with invalid JSON', () => {
     const getItemSpy = vi.spyOn(safeLocalStorage, 'getItem').mockReturnValue('{{invalid json');
-    render(
-      <CartProvider>
-        <CartProbe />
-      </CartProvider>,
-    );
+    renderWithProvider();
     expect(screen.getByTestId('qty')).toHaveTextContent('0');
     expect(getItemSpy).toHaveBeenCalled();
   });
 
   it('handles loadCartFromStorage with non-object JSON', () => {
     vi.spyOn(safeLocalStorage, 'getItem').mockReturnValue('12345');
-    render(
-      <CartProvider>
-        <CartProbe />
-      </CartProvider>,
-    );
+    renderWithProvider();
     expect(screen.getByTestId('qty')).toHaveTextContent('0');
   });
 
@@ -94,42 +96,58 @@ describe('CartProvider', () => {
       '3': { id: '3', name: 'Vada', qty: 1, price: 40 }, // id is string instead of number
     };
     vi.spyOn(safeLocalStorage, 'getItem').mockReturnValue(JSON.stringify(badData));
-    render(
-      <CartProvider>
-        <CartProbe />
-      </CartProvider>,
-    );
+    renderWithProvider();
     // Only item 2 is valid
     expect(screen.getByTestId('qty')).toHaveTextContent('2');
     expect(screen.getByTestId('price')).toHaveTextContent('120');
   });
 
-  it('removes cart key from storage when cart is cleared', () => {
+  it('removes the per-table cart key from storage when cart is cleared', () => {
     const removeItemSpy = vi.spyOn(safeLocalStorage, 'removeItem');
     const setItemSpy = vi.spyOn(safeLocalStorage, 'setItem');
-    render(
-      <CartProvider>
-        <CartProbe />
-      </CartProvider>,
-    );
+    renderWithProvider(TEST_TABLE);
 
     fireEvent.click(screen.getByText('Add'));
     expect(setItemSpy).toHaveBeenCalled();
 
     removeItemSpy.mockClear();
     fireEvent.click(screen.getByText('Clear'));
-    expect(removeItemSpy).toHaveBeenCalledWith('auraspice_cart_v1');
+    // The key must be the per-table namespaced key, not the legacy bare key
+    expect(removeItemSpy).toHaveBeenCalledWith(cartStorageKey(TEST_TABLE));
+  });
+
+  it('uses separate localStorage keys for different tables', () => {
+    const setItemSpy = vi.spyOn(safeLocalStorage, 'setItem');
+
+    // Render table 01
+    const { unmount: unmount01 } = render(
+      <CartProvider tableNumber="01">
+        <CartProbe />
+      </CartProvider>,
+    );
+    fireEvent.click(screen.getByText('Add'));
+    unmount01();
+
+    // Render table 05
+    render(
+      <CartProvider tableNumber="05">
+        <CartProbe />
+      </CartProvider>,
+    );
+    fireEvent.click(screen.getByText('Add'));
+
+    const calledKeys = setItemSpy.mock.calls.map(([key]) => key);
+    expect(calledKeys).toContain(cartStorageKey('01'));
+    expect(calledKeys).toContain(cartStorageKey('05'));
+    // They must be different
+    expect(cartStorageKey('01')).not.toEqual(cartStorageKey('05'));
   });
 
   it('handles localstorage quota exceeded error silently', () => {
     vi.spyOn(safeLocalStorage, 'setItem').mockImplementation(() => {
       throw new Error('Quota exceeded');
     });
-    render(
-      <CartProvider>
-        <CartProbe />
-      </CartProvider>,
-    );
+    renderWithProvider();
     expect(() => {
       fireEvent.click(screen.getByText('Add'));
     }).not.toThrow();
@@ -155,7 +173,7 @@ describe('CartProvider', () => {
     }
 
     render(
-      <CartProvider>
+      <CartProvider tableNumber={TEST_TABLE}>
         <CustomProbe />
       </CartProvider>,
     );
@@ -168,5 +186,10 @@ describe('CartProvider', () => {
 
     fireEvent.click(screen.getByText('UnsupportedAction'));
     expect(screen.getByTestId('keys')).toHaveTextContent('0');
+  });
+
+  it('cartStorageKey returns the correct namespaced key', () => {
+    expect(cartStorageKey('01')).toBe('auraspice_cart_v1:01');
+    expect(cartStorageKey('15')).toBe('auraspice_cart_v1:15');
   });
 });

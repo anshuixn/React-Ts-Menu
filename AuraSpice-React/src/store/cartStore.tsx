@@ -3,18 +3,29 @@ import { CartContext } from './cart-context';
 import { safeLocalStorage } from '../lib/storage';
 import type { Cart, CartItem, MenuItem } from '../types';
 
-// Versioned storage key — bump version to invalidate stale persisted carts
-const CART_STORAGE_KEY = 'auraspice_cart_v1';
+// ─── Storage key helpers ──────────────────────────────────────────────────────
+
+const CART_STORAGE_VERSION = 'auraspice_cart_v1';
+
+/**
+ * Per-table storage key. Each table gets its own localStorage entry so that
+ * switching tables never shares or contaminates cart state.
+ *
+ * Example: "auraspice_cart_v1:05"
+ */
+export function cartStorageKey(tableNumber: string): string {
+  return `${CART_STORAGE_VERSION}:${tableNumber}`;
+}
 
 // ─── Persist helpers ──────────────────────────────────────────────────────────
 
-function loadCartFromStorage(): Cart {
+function loadCartFromStorage(tableNumber: string): Cart {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = safeLocalStorage.getItem(CART_STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(cartStorageKey(tableNumber));
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
-    // Basic schema guard — each value must have id, qty, price
+    // Basic schema guard — each value must have id, qty, price, name
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
     const validated: Cart = {};
     for (const [key, val] of Object.entries(parsed)) {
@@ -35,13 +46,14 @@ function loadCartFromStorage(): Cart {
   }
 }
 
-function saveCartToStorage(cart: Cart): void {
+function saveCartToStorage(tableNumber: string, cart: Cart): void {
   if (typeof window === 'undefined') return;
   try {
+    const key = cartStorageKey(tableNumber);
     if (Object.keys(cart).length === 0) {
-      safeLocalStorage.removeItem(CART_STORAGE_KEY);
+      safeLocalStorage.removeItem(key);
     } else {
-      safeLocalStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      safeLocalStorage.setItem(key, JSON.stringify(cart));
     }
   } catch {
     // Storage quota exceeded or private browsing — fail silently
@@ -93,13 +105,33 @@ function cartReducer(state: Cart, action: CartAction): Cart {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, dispatch] = useReducer(cartReducer, undefined, loadCartFromStorage);
+interface CartProviderProps {
+  /**
+   * The table number this cart belongs to. The provider keys its localStorage
+   * entry and context value off this string.
+   *
+   * IMPORTANT: OrderPage must pass `key={tableNumber}` alongside this prop so
+   * that React remounts the provider (and resets reducer state) every time the
+   * table changes. Without the `key` prop the reducer state would be stale even
+   * though the storage key changed.
+   */
+  tableNumber: string;
+  children: React.ReactNode;
+}
 
-  // Persist to localStorage on every state change
+export function CartProvider({ tableNumber, children }: CartProviderProps) {
+  // Lazy initialiser runs exactly once on mount (and again on remount, which
+  // happens whenever the `key` prop changes in OrderPage).
+  const [cart, dispatch] = useReducer(
+    cartReducer,
+    undefined,
+    () => loadCartFromStorage(tableNumber),
+  );
+
+  // Persist to localStorage on every cart state change, scoped to this table.
   useEffect(() => {
-    saveCartToStorage(cart);
-  }, [cart]);
+    saveCartToStorage(tableNumber, cart);
+  }, [tableNumber, cart]);
 
   const computed = useMemo(() => {
     const items = Object.values(cart) as CartItem[];
@@ -110,7 +142,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart]);
 
   return (
-    <CartContext.Provider value={{ cart, dispatch, ...computed }}>
+    <CartContext.Provider value={{ tableNumber, cart, dispatch, ...computed }}>
       {children}
     </CartContext.Provider>
   );

@@ -17,14 +17,13 @@ const StatusDrawer = lazy(async () => {
   return { default: module.StatusDrawer };
 });
 
-function OrderPageInner() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const initialTable = searchParams.get('table');
+// ─── Inner component (always rendered inside CartProvider) ────────────────────
+//
+// All cart access via `useCart()` is guaranteed to belong to the currently
+// selected table because CartProvider is re-keyed whenever tableNumber changes.
 
-  const [tableNumber, setTableNumber] = useState<string>(initialTable ?? '');
-  const [showTableSelector, setShowTableSelector] = useState<boolean>(!initialTable);
-
+function OrderPageInner({ tableNumber }: { tableNumber: string }) {
+  const [searchParams] = useSearchParams();
   const initialFilter = (searchParams.get('filter') ?? 'all') as Category;
 
   const [activeFilter, setActiveFilter] = useState<Category>(initialFilter);
@@ -33,10 +32,10 @@ function OrderPageInner() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(
-    () => safeSessionStorage.getItem('currentOrderId')
+    () => safeSessionStorage.getItem('currentOrderId'),
   );
   const [currentTrackingToken, setCurrentTrackingToken] = useState<string | null>(
-    () => safeSessionStorage.getItem('currentTrackingToken')
+    () => safeSessionStorage.getItem('currentTrackingToken'),
   );
 
   const { cart, dispatch, totalQty } = useCart();
@@ -46,36 +45,18 @@ function OrderPageInner() {
 
   useEffect(() => {
     if (!status) return;
-    
+
     if (prevStatusRef.current && prevStatusRef.current !== status) {
       if (['cooking', 'ready', 'completed'].includes(status)) {
         playChime();
       }
-      
+
       if (status === 'completed' && !statusOpen) {
         setStatusOpen(true);
       }
     }
     prevStatusRef.current = status;
   }, [status, playChime, statusOpen]);
-
-  const handleSelectTable = useCallback((table: string) => {
-    setTableNumber(table);
-    setShowTableSelector(false);
-    setSearchParams((prev) => { prev.set('table', table); return prev; }, { replace: true });
-  }, [setSearchParams]);
-
-  const handleCloseTableSelector = useCallback(() => {
-    if (!tableNumber) {
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate('/', { replace: true });
-      }
-    } else {
-      setShowTableSelector(false);
-    }
-  }, [tableNumber, navigate]);
 
   const openCart = useCallback(() => {
     playSwoosh();
@@ -93,10 +74,8 @@ function OrderPageInner() {
   const submitOrder = useCallback(async () => {
     const items = Object.values(cart);
     if (items.length === 0) return;
-    if (!tableNumber) {
-      setShowTableSelector(true);
-      return;
-    }
+    // tableNumber is guaranteed non-empty because OrderPageShell only renders
+    // this component after a table is selected (handled in OrderPageShell).
     setCheckoutError(null);
 
     try {
@@ -144,47 +123,7 @@ function OrderPageInner() {
   }, [cart, dispatch, tableNumber]);
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingTop: 80 }}>
-      {/* Page Header */}
-      <header className="order-page-header" style={{ padding: '30px 5% 20px', borderBottom: '1px solid var(--glass-border)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div className="logo" style={{ fontSize: '1.4rem' }}>Aura<span>&</span>Spice</div>
-
-          <button
-            id="table-selector-btn"
-            onClick={() => setShowTableSelector(true)}
-            title="Tap to change table"
-            aria-label={`Table ${tableNumber || 'not selected'}. Tap to change.`}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: 'rgba(212, 175, 55, 0.08)',
-              border: '1px solid rgba(212, 175, 55, 0.35)',
-              borderRadius: 10,
-              padding: '6px 14px',
-              cursor: 'pointer',
-              transition: 'all 0.25s ease',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(212,175,55,0.16)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.6)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(212,175,55,0.08)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.35)';
-            }}
-          >
-            <img src="/icons/table.png" alt="" style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: '50%', flexShrink: 0 }} draggable={false} />
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Table</span>
-            <span style={{ color: 'var(--accent-gold)', fontWeight: 700, fontSize: '1rem', minWidth: 24 }}>
-              {tableNumber ? parseInt(tableNumber) : '—'}
-            </span>
-            <span style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>✎</span>
-          </button>
-        </div>
-      </header>
-
+    <>
       {/* Filter Tabs */}
       <section style={{ padding: '20px 5%', maxWidth: 1200, margin: '0 auto' }}>
         <FilterTabs active={activeFilter} onChange={setActiveFilter} />
@@ -237,8 +176,117 @@ function OrderPageInner() {
 
       {/* Success Overlay */}
       <SuccessOverlay active={showOverlay} />
+    </>
+  );
+}
 
-      {/* Table Selector Modal */}
+// ─── Shell: owns table selection state ───────────────────────────────────────
+//
+// Keeping table selection here (outside CartProvider) is intentional.
+// CartProvider is re-keyed whenever tableNumber changes, which guarantees
+// a fresh reducer state and a fresh per-table localStorage read.
+
+export default function OrderPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const initialTable = searchParams.get('table');
+
+  const [tableNumber, setTableNumber] = useState<string>(initialTable ?? '');
+  const [showTableSelector, setShowTableSelector] = useState<boolean>(!initialTable);
+
+  const handleSelectTable = useCallback((table: string) => {
+    // Clear stale order-tracking session data when the user picks a new table.
+    // This prevents the status drawer from showing a previous table's order.
+    if (table !== tableNumber) {
+      safeSessionStorage.removeItem('currentOrderId');
+      safeSessionStorage.removeItem('currentTrackingToken');
+    }
+    setTableNumber(table);
+    setShowTableSelector(false);
+    setSearchParams((prev) => { prev.set('table', table); return prev; }, { replace: true });
+  }, [tableNumber, setSearchParams]);
+
+  const handleCloseTableSelector = useCallback(() => {
+    if (!tableNumber) {
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/', { replace: true });
+      }
+    } else {
+      setShowTableSelector(false);
+    }
+  }, [tableNumber, navigate]);
+
+  return (
+    <main style={{ minHeight: '100vh', background: 'var(--bg-dark)', paddingTop: 80 }}>
+      {/* Page Header */}
+      <header className="order-page-header" style={{ padding: '30px 5% 20px', borderBottom: '1px solid var(--glass-border)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div className="logo" style={{ fontSize: '1.4rem' }}>Aura<span>&</span>Spice</div>
+
+          <button
+            id="table-selector-btn"
+            onClick={() => setShowTableSelector(true)}
+            title="Tap to change table"
+            aria-label={`Table ${tableNumber || 'not selected'}. Tap to change.`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'rgba(212, 175, 55, 0.08)',
+              border: '1px solid rgba(212, 175, 55, 0.35)',
+              borderRadius: 10,
+              padding: '6px 14px',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(212,175,55,0.16)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.6)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(212,175,55,0.08)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.35)';
+            }}
+          >
+            <img src="/icons/table.png" alt="" style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: '50%', flexShrink: 0 }} draggable={false} />
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Table</span>
+            <span style={{ color: 'var(--accent-gold)', fontWeight: 700, fontSize: '1rem', minWidth: 24 }}>
+              {tableNumber ? parseInt(tableNumber) : '—'}
+            </span>
+            <span style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>✎</span>
+          </button>
+        </div>
+      </header>
+
+      {/*
+       * KEY PROP IS THE CORE FIX.
+       *
+       * React uses the `key` to identify component instances. When `key` changes,
+       * React tears down the old CartProvider subtree (running cleanup) and mounts
+       * a fresh one (running the lazy initialiser with the new tableNumber).
+       *
+       * This guarantees:
+       *  - useReducer starts with the new table's localStorage data, not stale data.
+       *  - No CLEAR_CART dispatch is needed — the reducer is brand-new.
+       *  - No race condition — the old state is gone before the new one mounts.
+       *  - Switching tables 100 times never mixes carts.
+       *
+       * If no table is selected yet we render a placeholder; OrderPageInner is
+       * only mounted once a table is confirmed.
+       */}
+      {tableNumber ? (
+        <CartProvider key={tableNumber} tableNumber={tableNumber}>
+          <OrderPageInner tableNumber={tableNumber} />
+        </CartProvider>
+      ) : (
+        // No table selected — content is intentionally empty; the modal below
+        // will prompt the user to pick a table.
+        <div style={{ minHeight: 200 }} />
+      )}
+
+      {/* Table Selector Modal — rendered outside CartProvider intentionally */}
       <TableSelector
         isOpen={showTableSelector}
         current={tableNumber}
@@ -246,13 +294,5 @@ function OrderPageInner() {
         onClose={handleCloseTableSelector}
       />
     </main>
-  );
-}
-
-export default function OrderPage() {
-  return (
-    <CartProvider>
-      <OrderPageInner />
-    </CartProvider>
   );
 }

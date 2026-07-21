@@ -9,6 +9,8 @@ export type CartAction =
   | { type: 'CLEAR_CART' };
 
 export interface CartContextValue {
+  /** The table this cart belongs to. Guaranteed to match the CartProvider's tableNumber prop. */
+  tableNumber: string;
   cart: Cart;
   dispatch: Dispatch<CartAction>;
   totalQty: number;
